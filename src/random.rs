@@ -1,7 +1,7 @@
 use rand::rngs::ThreadRng;
 use rand::{thread_rng, Rng};
 
-const normal_table: [i32; 256] = [
+const NORMAL_TABLE: [i32; 256] = [
     206, 613, 1022, 1430, 1838, 2245, 2652, 3058, 3463, 3867, 4271, 4673, 5075, 5475, 5874, 6271,
     6667, 7061, 7454, 7845, 8234, 8621, 9006, 9389, 9770, 10148, 10524, 10898, 11269, 11638, 12004,
     12367, 12727, 13085, 13440, 13792, 14140, 14486, 14828, 15168, 15504, 15836, 16166, 16492,
@@ -56,13 +56,13 @@ impl Random {
 
     pub fn rand_normal(&mut self, mean: i32, stand: i32) -> i32 {
         let mut low = 0;
-        let mut high = normal_table.len();
+        let mut high = NORMAL_TABLE.len();
 
         let tmp = self.randint0(32768);
 
         while low < high {
             let mid = (low + high) >> 1;
-            if normal_table[mid] < tmp {
+            if NORMAL_TABLE[mid] < tmp {
                 low = mid + 1;
             } else {
                 high = mid;

@@ -1,106 +1,112 @@
+use std::collections::HashMap;
 use crate::types::Loc;
 use crate::objects::Object;
 
-enum game_event_type
+#[derive(Debug, Hash, PartialEq, Eq, Clone, Copy)]
+pub enum GameEvent
 {
-	EVENT_MAP = 0,		/* Some part of the map has changed. */
+	EventMap = 0,		/* Some part of the map has changed. */
 
-	EVENT_STATS,  		/* One or more of the stats. */
-	EVENT_HP,	   	/* HP or MaxHP. */
-	EVENT_MANA,		/* Mana or MaxMana. */
-	EVENT_AC,		/* Armour Class. */
-	EVENT_EXPERIENCE,	/* Experience or MaxExperience. */
-	EVENT_PLAYERLEVEL,	/* Player's level has changed */
-	EVENT_PLAYERTITLE,	/* Player's title has changed */
-	EVENT_GOLD,		/* Player's gold amount. */
-	EVENT_MONSTERHEALTH,	/* Observed monster's health level. */
-	EVENT_DUNGEONLEVEL,	/* Dungeon depth */
-	EVENT_PLAYERSPEED,	/* Player's speed */
-	EVENT_RACE_CLASS,	/* Race or Class */
-	EVENT_STUDYSTATUS,	/* "Study" availability */
-	EVENT_STATUS,		/* Status */
-	EVENT_DETECTIONSTATUS,  /* Trap detection status */
-	EVENT_FEELING,		/* Object level feeling */
-	EVENT_LIGHT,		/* Light level */
-	EVENT_STATE,		/* The two 'R's: Resting and Repeating */
+	EventStats,  		/* One or more of the stats. */
+	EventHp,	   	/* HP or MaxHP. */
+	EventMana,		/* Mana or MaxMana. */
+	EventAc,		/* Armour Class. */
+	EventExperience,	/* Experience or MaxExperience. */
+	EventPlayerlevel,	/* Player's level has changed */
+	EventPlayertitle,	/* Player's title has changed */
+	EventGold,		/* Player's gold amount. */
+	EventMonsterhealth,	/* Observed monster's health level. */
+	EventDungeonlevel,	/* Dungeon depth */
+	EventPlayerspeed,	/* Player's speed */
+	EventRaceClass,	/* Race or Class */
+	EventStudystatus,	/* "Study" availability */
+	EventStatus,		/* Status */
+	EventDetectionstatus,  /* Trap detection status */
+	EventFeeling,		/* Object level feeling */
+	EventLight,		/* Light level */
+	EventState,		/* The two 'R's: Resting and Repeating */
 
-	EVENT_PLAYERMOVED,
-	EVENT_SEEFLOOR,         /* When the player would "see" floor objects */
-	EVENT_EXPLOSION,
-	EVENT_BOLT,
-	EVENT_MISSILE,
+	EventPlayermoved,
+	EventSeefloor,         /* When the player would "see" floor objects */
+	EventExplosion,
+	EventBolt,
+	EventMissile,
 
-	EVENT_INVENTORY,
-	EVENT_EQUIPMENT,
-	EVENT_ITEMLIST,
-	EVENT_MONSTERLIST,
-	EVENT_MONSTERTARGET,
-	EVENT_OBJECTTARGET,
-	EVENT_MESSAGE,
-	EVENT_SOUND,
-	EVENT_BELL,
-	EVENT_USE_STORE,
-	EVENT_STORECHANGED,	/* Triggered on a successful buy/retrieve or sell/drop */
+	EventInventory,
+	EventEquipment,
+	EventItemlist,
+	EventMonsterlist,
+	EventMonstertarget,
+	EventObjecttarget,
+	EventMessage,
+	EventSound,
+	EventBell,
+	EventUseStore,
+	EventStorechanged,	/* Triggered on a successful buy/retrieve or sell/drop */
 
-	EVENT_INPUT_FLUSH,
-	EVENT_MESSAGE_FLUSH,
-	EVENT_CHECK_INTERRUPT,
-	EVENT_REFRESH,
-	EVENT_NEW_LEVEL_DISPLAY,
-	EVENT_COMMAND_REPEAT,
-	EVENT_ANIMATE,
-	EVENT_CHEAT_DEATH,
+	EventInputFlush,
+	EventMessageFlush,
+	EventCheckInterrupt,
+	EventRefresh,
+	EventNewLevelDisplay,
+	EventCommandRepeat,
+	EventAnimate,
+	EventCheatDeath,
 
-	EVENT_INITSTATUS,	/* New status message for initialisation */
-	EVENT_BIRTHPOINTS,	/* Change in the birth points */
+	EventInitstatus,	/* New status message for initialisation */
+	EventBirthpoints,	/* Change in the birth points */
 
 	/* Changing of the game state/context. */
-	EVENT_ENTER_INIT,
-	EVENT_LEAVE_INIT,
-	EVENT_ENTER_BIRTH,
-	EVENT_LEAVE_BIRTH,
-	EVENT_ENTER_GAME,
-	EVENT_LEAVE_GAME,
-	EVENT_ENTER_WORLD,
-	EVENT_LEAVE_WORLD,
-	EVENT_ENTER_STORE,
-	EVENT_LEAVE_STORE,
-	EVENT_ENTER_DEATH,
-	EVENT_LEAVE_DEATH,
+	EventEnterInit,
+	EventLeaveInit,
+	EventEnterBirth,
+	EventLeaveBirth,
+	EventEnterGame,
+	EventLeaveGame,
+	EventEnterWorld,
+	EventLeaveWorld,
+	EventEnterStore,
+	EventLeaveStore,
+	EventEnterDeath,
+	EventLeaveDeath,
 
 	/* Events for introspection into dungeon generation */
-	EVENT_GEN_LEVEL_START, /* has string in event data for profile name */
-	EVENT_GEN_LEVEL_END, /* has flag in event data indicating success */
-	EVENT_GEN_ROOM_START, /* has string in event data for room type */
-	EVENT_GEN_ROOM_CHOOSE_SIZE, /* has size in event data */
-	EVENT_GEN_ROOM_CHOOSE_SUBTYPE, /* has string in event data with name */
-	EVENT_GEN_ROOM_END, /* has flag in event data indicating success */
-	EVENT_GEN_TUNNEL_FINISHED, /* has tunnel in event data with results */
+	EventGenLevelStart, /* has string in event data for profile name */
+	EventGenLevelEnd, /* has flag in event data indicating success */
+	EventGenRoomStart, /* has string in event data for room type */
+	EventGenRoomChooseSize, /* has size in event data */
+	EventGenRoomChooseSubtype, /* has string in event data with name */
+	EventGenRoomEnd, /* has flag in event data indicating success */
+	EventGenTunnelFinished, /* has tunnel in event data with results */
 
-	EVENT_END  /* Can be sent at the end of a series of events */
+	EventEnd  /* Can be sent at the end of a series of events */
 }
 
+#[derive(Debug, Clone)]
 pub struct Message {
 	msg: String,
 	msg_type: i32
 }
 
-pub struct Birthstage<T> {
+#[derive(Debug, Clone)]
+pub struct Birthstage {
 	reset: bool,
 	hint: String,
 	n_choices: i32,
 	initial_choice: i32,
 	choices: Vec<String>,
 	helptexts: Vec<String>,
-	xtra: T
+	xtra: bool
 }
 
+#[derive(Debug, Clone)]
 pub struct Birthpoints {
 	points: Vec<i32>,
 	inc_points: Vec<i32>,
 	remaining: i32
 }
 
+#[derive(Debug, Clone)]
 pub struct Explosion {
 	proj_type: i32,
 	num_grids: i32,
@@ -111,6 +117,7 @@ pub struct Explosion {
 	centre: Loc
 }
 
+#[derive(Debug, Clone)]
 pub struct Bolt {
 	proj_type: i32,
 	drawing: bool,
@@ -122,6 +129,7 @@ pub struct Bolt {
 	x: i32,
 }
 
+#[derive(Debug, Clone)]
 pub struct Missile {
 	obj: Object,
 	seen: bool,
@@ -129,11 +137,13 @@ pub struct Missile {
 	x: i32
 }
 
+#[derive(Debug, Clone)]
 pub struct Size {
 	h: i32,
 	w: i32
 }
 
+#[derive(Debug, Clone)]
 pub struct Tunnel {
 	/// "nstep" is the total number of tunneling steps made
 	nstep: i32,
@@ -154,26 +164,124 @@ pub struct Tunnel {
 	early: bool
 }
 
-pub enum GameEventData<T> {
-	POINT(Loc),
+#[derive(Debug)]
+pub enum GameEventData {
+	Point (Loc),
 
-	STRING(String),
+	String (String),
 
-	FLAG(bool),
+	Flag (bool),
 
-	MESSAGE(Message),
+	Message (Message),
 
-	BIRTHSTAGE(Birthstage<T>),
+	Birthstage (Birthstage),
 
-	BIRTHPOINTS(Birthpoints),
+	Birthpoints (Birthpoints),
 
-	EXPLOSION(Explosion),
+	Explosion (Explosion),
 
-	BOLT(Bolt),
+	Bolt (Bolt),
 
-	MISSILE(Missile),
+	Missile (Missile),
 
-	SIZE(Size),
+	Size (Size),
 
-	TUNNEL(Tunnel)
+	Tunnel (Tunnel)
+}
+
+pub struct EventContext {
+
+}
+
+pub struct MessageEntry {
+	pub context: EventContext,
+	pub operation: Box<dyn FnMut(&GameEvent, &GameEventData, &mut EventContext) -> ()>
+}
+
+pub struct MessageQueue {
+	event_handlers: HashMap<GameEvent, Vec<MessageEntry>>
+}
+
+impl MessageQueue {
+	pub fn new() -> MessageQueue {
+		let mut map = HashMap::new();
+		map.insert(GameEvent::EventMap, vec!());
+
+		map.insert(GameEvent::EventStats, vec!());
+		map.insert(GameEvent::EventHp, vec!());
+		map.insert(GameEvent::EventMana, vec!());
+		map.insert(GameEvent::EventAc, vec!());
+		map.insert(GameEvent::EventExperience, vec!());
+		map.insert(GameEvent::EventPlayerlevel, vec!());
+		map.insert(GameEvent::EventPlayertitle, vec!());
+		map.insert(GameEvent::EventGold, vec!());
+		map.insert(GameEvent::EventMonsterhealth, vec!());
+		map.insert(GameEvent::EventDungeonlevel, vec!());
+		map.insert(GameEvent::EventPlayerspeed, vec!());
+		map.insert(GameEvent::EventRaceClass, vec!());
+		map.insert(GameEvent::EventStudystatus, vec!());
+		map.insert(GameEvent::EventStatus, vec!());
+		map.insert(GameEvent::EventDetectionstatus, vec!());
+		map.insert(GameEvent::EventFeeling, vec!());
+		map.insert(GameEvent::EventLight, vec!());
+		map.insert(GameEvent::EventState, vec!());
+		map.insert(GameEvent::EventPlayermoved, vec!());
+		map.insert(GameEvent::EventSeefloor, vec!());
+		map.insert(GameEvent::EventExplosion, vec!());
+		map.insert(GameEvent::EventBolt, vec!());
+		map.insert(GameEvent::EventMissile, vec!());
+		map.insert(GameEvent::EventInventory, vec!());
+		map.insert(GameEvent::EventEquipment, vec!());
+		map.insert(GameEvent::EventItemlist, vec!());
+		map.insert(GameEvent::EventMonsterlist, vec!());
+		map.insert(GameEvent::EventMonstertarget, vec!());
+		map.insert(GameEvent::EventObjecttarget, vec!());
+		map.insert(GameEvent::EventMessage, vec!());
+		map.insert(GameEvent::EventSound, vec!());
+		map.insert(GameEvent::EventBell, vec!());
+		map.insert(GameEvent::EventUseStore, vec!());
+		map.insert(GameEvent::EventStorechanged, vec!());
+		map.insert(GameEvent::EventInputFlush, vec!());
+		map.insert(GameEvent::EventMessageFlush, vec!());
+		map.insert(GameEvent::EventCheckInterrupt, vec!());
+		map.insert(GameEvent::EventRefresh, vec!());
+		map.insert(GameEvent::EventNewLevelDisplay, vec!());
+		map.insert(GameEvent::EventCommandRepeat, vec!());
+		map.insert(GameEvent::EventAnimate, vec!());
+		map.insert(GameEvent::EventCheatDeath, vec!());
+		map.insert(GameEvent::EventInitstatus, vec!());
+		map.insert(GameEvent::EventBirthpoints, vec!());
+		map.insert(GameEvent::EventEnterInit, vec!());
+		map.insert(GameEvent::EventLeaveInit, vec!());
+		map.insert(GameEvent::EventEnterBirth, vec!());
+		map.insert(GameEvent::EventLeaveBirth, vec!());
+		map.insert(GameEvent::EventEnterGame, vec!());
+		map.insert(GameEvent::EventLeaveGame, vec!());
+		map.insert(GameEvent::EventEnterWorld, vec!());
+		map.insert(GameEvent::EventLeaveWorld, vec!());
+		map.insert(GameEvent::EventEnterStore, vec!());
+		map.insert(GameEvent::EventLeaveStore, vec!());
+		map.insert(GameEvent::EventEnterDeath, vec!());
+		map.insert(GameEvent::EventLeaveDeath, vec!());
+		map.insert(GameEvent::EventGenLevelStart, vec!());
+		map.insert(GameEvent::EventGenLevelEnd, vec!());
+		map.insert(GameEvent::EventGenRoomStart, vec!());
+		map.insert(GameEvent::EventGenRoomChooseSize, vec!());
+		map.insert(GameEvent::EventGenRoomChooseSubtype, vec!());
+		map.insert(GameEvent::EventGenRoomEnd, vec!());
+		map.insert(GameEvent::EventGenTunnelFinished, vec!());
+		map.insert(GameEvent::EventEnd, vec!());
+
+		MessageQueue {
+			event_handlers: map
+		}
+	}
+
+	pub fn dispatch(&mut self, event_type: &GameEvent, event_data: GameEventData) -> () {
+		let mut handlers = self.event_handlers.get(&event_type).expect("Couldn't find an event type, should have been initialized!");
+		todo!();
+		// for handler in handlers {
+		// 	(handler.operation)(&event_type, &event_data, &handler.context);
+		// }
+	}
 }

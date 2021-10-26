@@ -1,7 +1,7 @@
 use crate::random::Random;
 use std::ops::{Add, Sub};
 
-#[derive(PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Loc {
 	x: i32,
 	y: i32
