@@ -114,7 +114,7 @@ impl Random {
         }
         sum
     }
-    pub fn damcalc(&mut self, qty: i32, sides: i32, aspect: Aspect) -> i32 {
+    pub fn damcalc(&mut self, qty: i32, sides: i32, aspect: &Aspect) -> i32 {
         match aspect {
             Aspect::MAXIMIZE => qty * sides,
             Aspect::EXTREMIFY => qty * sides,
@@ -155,7 +155,7 @@ impl Random {
         }
     }
 
-    pub fn m_bonus_calc(&mut self, max: i32, level: i32, aspect: Aspect) -> i32 {
+    pub fn m_bonus_calc(&mut self, max: i32, level: i32, aspect: &Aspect) -> i32 {
         match aspect {
             Aspect::EXTREMIFY => max,
             Aspect::MAXIMIZE => max,
@@ -171,10 +171,10 @@ impl Random {
 }
 
 pub struct Diceroll {
-    base: i32,
-    dice: i32,
-    sides: i32,
-    m_bonus: i32,
+    pub base: i32,
+    pub dice: i32,
+    pub sides: i32,
+    pub m_bonus: i32,
 }
 
 impl Diceroll {
@@ -187,10 +187,10 @@ impl Diceroll {
         }
     }
 
-    pub fn resolve(&self, rng: &mut Random, level: i32, aspect: Aspect) -> i32 {
-        if aspect == Aspect::EXTREMIFY {
-            let min = self.resolve(rng, level, Aspect::MINIMIZE);
-            let max = self.resolve(rng, level, Aspect::MAXIMIZE);
+    pub fn resolve(&self, rng: &mut Random, level: i32, aspect: &Aspect) -> i32 {
+        if *aspect == Aspect::EXTREMIFY {
+            let min = self.resolve(rng, level, &Aspect::MINIMIZE);
+            let max = self.resolve(rng, level, &Aspect::MAXIMIZE);
             if min > max {
                 min
             } else {
@@ -204,9 +204,9 @@ impl Diceroll {
     }
 
     pub fn valid(self, rng: &mut Random, test: i32) -> bool {
-        if test < self.resolve(rng, 0, Aspect::MINIMIZE) {
+        if test < self.resolve(rng, 0, &Aspect::MINIMIZE) {
             false
-        } else if test > self.resolve(rng, 0, Aspect::MAXIMIZE) {
+        } else if test > self.resolve(rng, 0, &Aspect::MAXIMIZE) {
             false
         } else {
             true
@@ -214,7 +214,7 @@ impl Diceroll {
     }
 
     pub fn varies(self, rng: &mut Random) -> bool {
-        self.resolve(rng, 0, Aspect::MINIMIZE) != self.resolve(rng, 0, Aspect::MAXIMIZE)
+        self.resolve(rng, 0, &Aspect::MINIMIZE) != self.resolve(rng, 0, &Aspect::MAXIMIZE)
     }
 }
 
