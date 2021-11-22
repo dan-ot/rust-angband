@@ -41,6 +41,10 @@ pub enum ObjectFlags {
 }
 
 impl ObjectFlags {
+    pub fn max() -> usize {
+        38
+    }
+    
     pub fn name(&self) -> &str {
         match self {
             ObjectFlags::None => "",

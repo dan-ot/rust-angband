@@ -170,6 +170,7 @@ impl Random {
     }
 }
 
+#[derive(Debug, Clone)]
 pub struct Diceroll {
     pub base: i32,
     pub dice: i32,

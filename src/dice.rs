@@ -7,11 +7,13 @@ use crate::random::Diceroll;
 use std::collections::HashMap;
 use crate::expressions::Expression;
 
+#[derive(Debug, Clone)]
 pub enum ExpressionOrValue {
     Expression (Expression),
     Value (i32)
 }
 
+#[derive(Debug, Clone)]
 pub struct Dice {
     /// Base (non-random) number
     b: ExpressionOrValue,

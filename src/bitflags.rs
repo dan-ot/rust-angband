@@ -4,6 +4,7 @@
 // a HashSet. A quick glance on the documentation there reveals a very similar
 // set of operators to the ones we see here
 
+#[derive(Debug, Clone)]
 pub struct Bitflag {
     /// A set of u8's representing a block of flag sets (each u8 is an array of 8 bits/flags)
     bytes: Vec<u8>,

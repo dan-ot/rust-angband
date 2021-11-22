@@ -1,4 +1,5 @@
 // The Expression module handles parsing strings into evaluatable expression trees
+use std::fmt::Debug;
 
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub enum ExpressionOperator {
@@ -66,6 +67,14 @@ pub struct Expression {
     base_value: Option<Box<dyn Fn() -> i32>>,
 
     operations: Vec<ExpressionOperation>
+}
+
+impl Debug for Expression {
+    fn fmt(&self, _: &mut std::fmt::Formatter<'_>) -> std::result::Result<(), std::fmt::Error> { todo!() }
+}
+
+impl Clone for Expression {
+    fn clone(&self) -> Self { todo!() }
 }
 
 impl Expression {
