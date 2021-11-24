@@ -5,7 +5,7 @@ mod objects;
 mod bitflags;
 mod expressions;
 mod dice;
-mod stats;
+mod player;
 mod monsters;
 mod colors;
 mod messages;

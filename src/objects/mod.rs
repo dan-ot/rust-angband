@@ -5,7 +5,7 @@ use crate::objects::flags::ObjectFlags;
 use crate::objects::mods::ObjMods;
 use crate::objects::tvals::TVals;
 use crate::random::Diceroll;
-use crate::stats::Stats;
+use crate::player::stats::Stats;
 use crate::types::Loc;
 use std::collections::HashMap;
 
