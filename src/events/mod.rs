@@ -1,3 +1,4 @@
+use crate::messages::MessageType;
 use std::collections::HashMap;
 use crate::types::Loc;
 use crate::objects::Object;
@@ -5,16 +6,25 @@ use crate::objects::Object;
 #[derive(Debug, Hash, PartialEq, Eq, Clone, Copy)]
 pub enum GameEvent
 {
-	EventMap = 0,		/* Some part of the map has changed. */
+	/// Some part of the map has changed.
+	EventMap = 0,		
 
-	EventStats,  		/* One or more of the stats. */
-	EventHp,	   	/* HP or MaxHP. */
-	EventMana,		/* Mana or MaxMana. */
-	EventAc,		/* Armour Class. */
-	EventExperience,	/* Experience or MaxExperience. */
-	EventPlayerlevel,	/* Player's level has changed */
-	EventPlayertitle,	/* Player's title has changed */
-	EventGold,		/* Player's gold amount. */
+	/// One or more of the stats.
+	EventStats,  		
+	/// HP or MaxHP.
+	EventHp,	   	
+	/// Mana or MaxMana.
+	EventMana,		
+	/// Armour Class.
+	EventAc,		
+	/// Experience or MaxExperience.
+	EventExperience,	
+	/// Player's level has changed
+	EventPlayerlevel,	
+	/// Player's title has changed
+	EventPlayertitle,	
+	/// Player's gold amount.
+	EventGold,		
 	EventMonsterhealth,	/* Observed monster's health level. */
 	EventDungeonlevel,	/* Dungeon depth */
 	EventPlayerspeed,	/* Player's speed */
@@ -84,8 +94,8 @@ pub enum GameEvent
 
 #[derive(Debug, Clone)]
 pub struct Message {
-	msg: String,
-	msg_type: i32
+	pub msg: Option<String>,
+	pub msg_type: MessageType
 }
 
 #[derive(Debug, Clone)]
@@ -204,73 +214,73 @@ pub struct MessageQueue {
 
 impl MessageQueue {
 	pub fn new() -> MessageQueue {
-		let mut map = HashMap::new();
-		map.insert(GameEvent::EventMap, vec!());
-
-		map.insert(GameEvent::EventStats, vec!());
-		map.insert(GameEvent::EventHp, vec!());
-		map.insert(GameEvent::EventMana, vec!());
-		map.insert(GameEvent::EventAc, vec!());
-		map.insert(GameEvent::EventExperience, vec!());
-		map.insert(GameEvent::EventPlayerlevel, vec!());
-		map.insert(GameEvent::EventPlayertitle, vec!());
-		map.insert(GameEvent::EventGold, vec!());
-		map.insert(GameEvent::EventMonsterhealth, vec!());
-		map.insert(GameEvent::EventDungeonlevel, vec!());
-		map.insert(GameEvent::EventPlayerspeed, vec!());
-		map.insert(GameEvent::EventRaceClass, vec!());
-		map.insert(GameEvent::EventStudystatus, vec!());
-		map.insert(GameEvent::EventStatus, vec!());
-		map.insert(GameEvent::EventDetectionstatus, vec!());
-		map.insert(GameEvent::EventFeeling, vec!());
-		map.insert(GameEvent::EventLight, vec!());
-		map.insert(GameEvent::EventState, vec!());
-		map.insert(GameEvent::EventPlayermoved, vec!());
-		map.insert(GameEvent::EventSeefloor, vec!());
-		map.insert(GameEvent::EventExplosion, vec!());
-		map.insert(GameEvent::EventBolt, vec!());
-		map.insert(GameEvent::EventMissile, vec!());
-		map.insert(GameEvent::EventInventory, vec!());
-		map.insert(GameEvent::EventEquipment, vec!());
-		map.insert(GameEvent::EventItemlist, vec!());
-		map.insert(GameEvent::EventMonsterlist, vec!());
-		map.insert(GameEvent::EventMonstertarget, vec!());
-		map.insert(GameEvent::EventObjecttarget, vec!());
-		map.insert(GameEvent::EventMessage, vec!());
-		map.insert(GameEvent::EventSound, vec!());
-		map.insert(GameEvent::EventBell, vec!());
-		map.insert(GameEvent::EventUseStore, vec!());
-		map.insert(GameEvent::EventStorechanged, vec!());
-		map.insert(GameEvent::EventInputFlush, vec!());
-		map.insert(GameEvent::EventMessageFlush, vec!());
-		map.insert(GameEvent::EventCheckInterrupt, vec!());
-		map.insert(GameEvent::EventRefresh, vec!());
-		map.insert(GameEvent::EventNewLevelDisplay, vec!());
-		map.insert(GameEvent::EventCommandRepeat, vec!());
-		map.insert(GameEvent::EventAnimate, vec!());
-		map.insert(GameEvent::EventCheatDeath, vec!());
-		map.insert(GameEvent::EventInitstatus, vec!());
-		map.insert(GameEvent::EventBirthpoints, vec!());
-		map.insert(GameEvent::EventEnterInit, vec!());
-		map.insert(GameEvent::EventLeaveInit, vec!());
-		map.insert(GameEvent::EventEnterBirth, vec!());
-		map.insert(GameEvent::EventLeaveBirth, vec!());
-		map.insert(GameEvent::EventEnterGame, vec!());
-		map.insert(GameEvent::EventLeaveGame, vec!());
-		map.insert(GameEvent::EventEnterWorld, vec!());
-		map.insert(GameEvent::EventLeaveWorld, vec!());
-		map.insert(GameEvent::EventEnterStore, vec!());
-		map.insert(GameEvent::EventLeaveStore, vec!());
-		map.insert(GameEvent::EventEnterDeath, vec!());
-		map.insert(GameEvent::EventLeaveDeath, vec!());
-		map.insert(GameEvent::EventGenLevelStart, vec!());
-		map.insert(GameEvent::EventGenLevelEnd, vec!());
-		map.insert(GameEvent::EventGenRoomStart, vec!());
-		map.insert(GameEvent::EventGenRoomChooseSize, vec!());
-		map.insert(GameEvent::EventGenRoomChooseSubtype, vec!());
-		map.insert(GameEvent::EventGenRoomEnd, vec!());
-		map.insert(GameEvent::EventGenTunnelFinished, vec!());
-		map.insert(GameEvent::EventEnd, vec!());
+		let mut map = HashMap::from([
+			(GameEvent::EventMap, vec!()),	
+			(GameEvent::EventStats, vec!()),
+			(GameEvent::EventHp, vec!()),
+			(GameEvent::EventMana, vec!()),
+			(GameEvent::EventAc, vec!()),
+			(GameEvent::EventExperience, vec!()),
+			(GameEvent::EventPlayerlevel, vec!()),
+			(GameEvent::EventPlayertitle, vec!()),
+			(GameEvent::EventGold, vec!()),
+			(GameEvent::EventMonsterhealth, vec!()),
+			(GameEvent::EventDungeonlevel, vec!()),
+			(GameEvent::EventPlayerspeed, vec!()),
+			(GameEvent::EventRaceClass, vec!()),
+			(GameEvent::EventStudystatus, vec!()),
+			(GameEvent::EventStatus, vec!()),
+			(GameEvent::EventDetectionstatus, vec!()),
+			(GameEvent::EventFeeling, vec!()),
+			(GameEvent::EventLight, vec!()),
+			(GameEvent::EventState, vec!()),
+			(GameEvent::EventPlayermoved, vec!()),
+			(GameEvent::EventSeefloor, vec!()),
+			(GameEvent::EventExplosion, vec!()),
+			(GameEvent::EventBolt, vec!()),
+			(GameEvent::EventMissile, vec!()),
+			(GameEvent::EventInventory, vec!()),
+			(GameEvent::EventEquipment, vec!()),
+			(GameEvent::EventItemlist, vec!()),
+			(GameEvent::EventMonsterlist, vec!()),
+			(GameEvent::EventMonstertarget, vec!()),
+			(GameEvent::EventObjecttarget, vec!()),
+			(GameEvent::EventMessage, vec!()),
+			(GameEvent::EventSound, vec!()),
+			(GameEvent::EventBell, vec!()),
+			(GameEvent::EventUseStore, vec!()),
+			(GameEvent::EventStorechanged, vec!()),
+			(GameEvent::EventInputFlush, vec!()),
+			(GameEvent::EventMessageFlush, vec!()),
+			(GameEvent::EventCheckInterrupt, vec!()),
+			(GameEvent::EventRefresh, vec!()),
+			(GameEvent::EventNewLevelDisplay, vec!()),
+			(GameEvent::EventCommandRepeat, vec!()),
+			(GameEvent::EventAnimate, vec!()),
+			(GameEvent::EventCheatDeath, vec!()),
+			(GameEvent::EventInitstatus, vec!()),
+			(GameEvent::EventBirthpoints, vec!()),
+			(GameEvent::EventEnterInit, vec!()),
+			(GameEvent::EventLeaveInit, vec!()),
+			(GameEvent::EventEnterBirth, vec!()),
+			(GameEvent::EventLeaveBirth, vec!()),
+			(GameEvent::EventEnterGame, vec!()),
+			(GameEvent::EventLeaveGame, vec!()),
+			(GameEvent::EventEnterWorld, vec!()),
+			(GameEvent::EventLeaveWorld, vec!()),
+			(GameEvent::EventEnterStore, vec!()),
+			(GameEvent::EventLeaveStore, vec!()),
+			(GameEvent::EventEnterDeath, vec!()),
+			(GameEvent::EventLeaveDeath, vec!()),
+			(GameEvent::EventGenLevelStart, vec!()),
+			(GameEvent::EventGenLevelEnd, vec!()),
+			(GameEvent::EventGenRoomStart, vec!()),
+			(GameEvent::EventGenRoomChooseSize, vec!()),
+			(GameEvent::EventGenRoomChooseSubtype, vec!()),
+			(GameEvent::EventGenRoomEnd, vec!()),
+			(GameEvent::EventGenTunnelFinished, vec!()),
+			(GameEvent::EventEnd, vec!()),
+		]);
 
 		MessageQueue {
 			event_handlers: map
