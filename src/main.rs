@@ -9,6 +9,7 @@ mod player;
 mod monsters;
 mod colors;
 mod messages;
+mod cave;
 
 fn main() {
     println!("Hello, world!");

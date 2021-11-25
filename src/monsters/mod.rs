@@ -2,3 +2,7 @@
 pub struct MonsterRace {
 
 }
+
+pub struct Monster {
+    
+}

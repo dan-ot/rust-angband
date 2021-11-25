@@ -1,18 +1,15 @@
 use crate::bitflags::Bitflag;
 use crate::dice::Dice;
 use crate::monsters::MonsterRace;
-use crate::objects::flags::ObjectFlags;
-use crate::objects::mods::ObjMods;
-use crate::objects::tvals::TVals;
 use crate::random::Diceroll;
 use crate::player::stats::Stats;
 use crate::types::Loc;
 use std::collections::HashMap;
 
-mod flags;
-mod kinds;
-mod mods;
-mod tvals;
+pub mod flags;
+pub mod kinds;
+pub mod mods;
+pub mod tvals;
 
 #[derive(Debug, Clone, PartialEq, PartialOrd)]
 pub enum FlagType {
@@ -65,7 +62,7 @@ pub struct ObjectProperty {
     pub power: i32,
     pub index: usize,
     pub mult: i32,
-    pub type_mult: HashMap<TVals, i32>,
+    pub type_mult: HashMap<tvals::TVals, i32>,
     pub name: String,
     pub adjective: String,
     pub neg_adj: String,
@@ -136,13 +133,13 @@ pub fn flag_message(all_props: &AllProperties, flag: &usize, name: &str) -> () {
     }
 }
 
-pub fn sustain_flag(stat: Stats) -> ObjectFlags {
+pub fn sustain_flag(stat: Stats) -> flags::ObjectFlags {
     match stat {
-        Stats::Str => ObjectFlags::SustStr,
-        Stats::Con => ObjectFlags::SustCon,
-        Stats::Dex => ObjectFlags::SustDex,
-        Stats::Int => ObjectFlags::SustInt,
-        Stats::Wis => ObjectFlags::SustWis,
+        Stats::Str => flags::ObjectFlags::SustStr,
+        Stats::Con => flags::ObjectFlags::SustCon,
+        Stats::Dex => flags::ObjectFlags::SustDex,
+        Stats::Int => flags::ObjectFlags::SustInt,
+        Stats::Wis => flags::ObjectFlags::SustWis,
     }
 }
 
@@ -342,7 +339,7 @@ pub struct ActivationService {
 #[derive(Debug, Clone)]
 pub struct ObjectBase {
     pub name: String,
-    pub tval: TVals,
+    pub tval: tvals::TVals,
     pub attr: i32,
     /// ObjectFlags
     pub flags: Bitflag,
@@ -369,7 +366,7 @@ pub struct ObjectKind {
     /// This was *object_base - is that an array?
     pub base: ObjectBase,
     pub index: u32,
-    pub tval: TVals,
+    pub tval: tvals::TVals,
     /// Object sub-type. Is this actually an enum? Or a union of enums?
     pub sval: i32,
 
@@ -400,7 +397,7 @@ pub struct ObjectKind {
     /// KindFlags
     pub kind_flags: Bitflag,
 
-    pub modifiers: HashMap<ObjMods, Diceroll>,
+    pub modifiers: HashMap<mods::ObjMods, Diceroll>,
     pub el_info: HashMap<Elements, ElementInfo>,
 
     pub brands: Vec<bool>,
@@ -481,7 +478,7 @@ pub struct Artifact {
     /// Artifact Index (for cross-referencing saved state...)
     pub aidx: u32,
 
-    pub tval: TVals,
+    pub tval: tvals::TVals,
     /// Artifact sub-type. Probably an enum, or an enum/union of enums
     pub sval: i32,
 
@@ -499,7 +496,7 @@ pub struct Artifact {
     /// ObjectFlags
     pub flags: Bitflag,
 
-    pub modifiers: HashMap<ObjMods, i32>,
+    pub modifiers: HashMap<mods::ObjMods, i32>,
     pub el_info: HashMap<Elements, ElementInfo>,
 
     pub brands: Vec<bool>,
@@ -551,8 +548,8 @@ pub struct EgoItem {
     /// KindFlags
     pub kind_flags: Bitflag,
 
-    pub modifiers: HashMap<ObjMods, Diceroll>,
-    pub min_modifiers: HashMap<ObjMods, i32>,
+    pub modifiers: HashMap<mods::ObjMods, Diceroll>,
+    pub min_modifiers: HashMap<mods::ObjMods, i32>,
     pub el_info: HashMap<Elements, ElementInfo>,
 
     pub brands: Vec<bool>,
@@ -624,7 +621,7 @@ pub struct Object {
 
     pub grid: Loc,
 
-    pub tval: TVals,
+    pub tval: tvals::TVals,
     pub sval: u8,
 
     pub pval: i16,
@@ -639,7 +636,7 @@ pub struct Object {
 
     /// ObjectFlags
     pub flags: Bitflag,
-    pub modifiers: HashMap<ObjMods, i16>,
+    pub modifiers: HashMap<mods::ObjMods, i16>,
     pub el_info: HashMap<Elements, ElementInfo>,
 
     // TODO: Are these parallel arrays mapping global list members to local state?
@@ -677,7 +674,7 @@ impl Object {
             artifact: None,
             oidx: 0,
             grid: Loc::zero(),
-            tval: TVals::Null,
+            tval: tvals::TVals::Null,
             sval: 0,
             pval: 0,
             weight: 0,
@@ -687,8 +684,8 @@ impl Object {
             to_a: 0,
             to_h: 0,
             to_d: 0,
-            flags: Bitflag::new(ObjectFlags::max()),
-            modifiers: HashMap::<ObjMods, i16>::new(),
+            flags: Bitflag::new(flags::ObjectFlags::max()),
+            modifiers: HashMap::<mods::ObjMods, i16>::new(),
             el_info: HashMap::<Elements, ElementInfo>::new(),
             brands: vec![],
             slays: vec![],
@@ -714,7 +711,7 @@ impl Object {
 #[derive(Debug, Clone)]
 pub struct Flavor {
     pub text: String,
-    pub tval: TVals,
+    pub tval: tvals::TVals,
     pub sval: u8,
     pub d_attr: u8,
     pub d_char: char
