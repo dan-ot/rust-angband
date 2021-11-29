@@ -1,5 +1,6 @@
 use crate::messages::MessageType;
 use std::collections::HashMap;
+use std::iter::FromIterator;
 use crate::types::Loc;
 use crate::objects::Object;
 
@@ -214,7 +215,7 @@ pub struct MessageQueue {
 
 impl MessageQueue {
 	pub fn new() -> MessageQueue {
-		let mut map = HashMap::from([
+		let mut map = HashMap::from_iter([
 			(GameEvent::EventMap, vec!()),	
 			(GameEvent::EventStats, vec!()),
 			(GameEvent::EventHp, vec!()),

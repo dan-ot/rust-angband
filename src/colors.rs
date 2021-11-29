@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::iter::FromIterator;
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq, Hash)]
 pub enum Colors {
@@ -62,7 +63,7 @@ impl ColorType {
     pub fn new(name: &str, full: Colors, mono: Colors, vga: Colors, blind: Colors, lighter: Colors, darker: Colors, highlight: Colors, metallic: Colors, misc: Colors) -> ColorType {
         ColorType {
             name: String::from(name),
-            color_translate: HashMap::from([
+            color_translate: HashMap::from_iter([
                 (Attrs::Full, full),
                 (Attrs::Mono, mono),
                 (Attrs::Vga, vga),
@@ -111,7 +112,7 @@ impl ColorService {
             -14, -13, -12, -11, -10, -9, -8, -7, -6, -5, -4, -3, -2, -1
         ];
         ColorService {
-            angband_color_table: HashMap::from([
+            angband_color_table: HashMap::from_iter([
                 (Colors::Dark, [0x00, 0x00, 0x00, 0x00]),
                 (Colors::White, [0x00, 0xff, 0xff, 0xff]),
                 (Colors::Slate, [0x00, 0x80, 0x80, 0x80]),
@@ -142,7 +143,7 @@ impl ColorService {
                 (Colors::DeepLBlue, [0x00, 0x00, 0xb0, 0xff]),
                 (Colors::Shade, [0x00, 0x28, 0x28, 0x28])
             ]),
-            color_table: HashMap::from([
+            color_table: HashMap::from_iter([
                 ('d', ColorType::new("Dark",       Colors::Dark,   Colors::Dark,  Colors::Dark,   Colors::Dark,   Colors::LDark,  Colors::Dark,   Colors::LDark,  Colors::LDark,  Colors::Dark)),
                 ('w', ColorType::new("White",      Colors::White,  Colors::White, Colors::White,  Colors::White,  Colors::Yellow, Colors::LWhite, Colors::LBlue,  Colors::Yellow, Colors::White)),
                 ('s', ColorType::new("Slate",      Colors::Slate,  Colors::White, Colors::Slate,  Colors::Slate,  Colors::White,  Colors::LDark,  Colors::LWhite, Colors::LWhite, Colors::Slate)),

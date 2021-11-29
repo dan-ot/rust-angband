@@ -4,7 +4,6 @@
 use crate::random::Aspect;
 use crate::random::Random;
 use crate::random::Diceroll;
-use std::collections::HashMap;
 use crate::expressions::Expression;
 
 #[derive(Debug, Clone)]
