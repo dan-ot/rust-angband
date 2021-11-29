@@ -1,3 +1,4 @@
+use crate::random::Random;
 use crate::cave::Chunk;
 use crate::types::Loc;
 use crate::monsters::Monster;
@@ -12,6 +13,7 @@ use crate::monsters::MonsterRace;
 pub mod stats;
 pub mod history;
 pub mod options;
+pub mod calcs;
 
 pub enum PlayerFlags {
     None = 0,
@@ -343,12 +345,12 @@ pub struct PlayerUpkeep {
     pub object: Object,
     pub object_kind: ObjectKind,
 
-    /// Bitflags for pending actions such as reordering inventory, ignoring, etc.
-    pub notice: u32,
-    /// Bitflags for recalculations needed such as HP, or visible area
-    pub update: u32,
-    /// Bitflags for things that have changed, and just need to be redrawn by the UI, such as HP, Speed, etc.
-    pub redraw: u32,
+    /// PlayerNotice Bitflags for pending actions such as reordering inventory, ignoring, etc.
+    pub notice: Bitflag,
+    /// PlayerUpdate Bitflags for recalculations needed such as HP, or visible area
+    pub update: Bitflag,
+    /// PlayerRedraw Bitflags for things that have changed, and just need to be redrawn by the UI, such as HP, Speed, etc.
+    pub redraw: Bitflag,
 
     /// Used by the UI to decide whether to start off showing equipment or inventory listings
     /// when offering a choice. Maybe a bool?
@@ -473,3 +475,132 @@ pub struct Player {
     pub known_state: PlayerState,
     pub upkeep: PlayerUpkeep
 }
+
+impl Player {
+    pub fn stat_inc(&mut self, random: &mut Random, stat: &Stats) -> bool {
+        let v = *self.stat_cur.get(stat).expect("Unrecognized stat for stat increase!"); // Stats are a closed set, so this should never panic.
+
+        if v >= 18 + 100 {
+            false
+        } else {
+            if v < 18 {
+                self.stat_cur.entry(*stat).and_modify(|s| { *s += 1 });
+            } else if v < 18 + 90 {
+                let mut gain = (((18 + 100) - v) / 2 + 3) / 2;
+                if gain < 1 {
+                    gain = 1;
+                }
+
+                self.stat_cur.entry(*stat).and_modify(|s| { 
+                    let added = (random.randint1(gain as i32) as i16) + gain / 2;
+                    if *s + added > 18 + 99 {
+                        *s = 18 + 99
+                    } else {
+                        *s += added
+                    }
+                });
+            } else {
+                self.stat_cur.entry(*stat).and_modify(|s| { *s = 18 + 100 });
+            }
+    
+            let nowits = *self.stat_cur.get(stat).unwrap();
+            if nowits > *self.stat_max.get(stat).unwrap() {
+                self.stat_max.entry(*stat).and_modify(|s| { *s = nowits });
+            }
+
+            self.upkeep.update.turn_on(&(calcs::PlayerUpdate::Bonus as usize));
+
+            true
+        }
+    }
+
+    pub fn stat_dec(&mut self, stat: &Stats, permanent: &bool) -> bool {
+        let mut cur = *self.stat_cur.get(stat).unwrap();
+        let mut max = *self.stat_max.get(stat).unwrap();
+        let mut res;
+
+        if cur > 18 + 10 {
+            cur -= 10;
+        } else if cur > 18 {
+            cur = 18;
+        } else if cur > 3 {
+            cur -= 1;
+        }
+
+        res = cur != *self.stat_cur.get(stat).unwrap();
+
+        if *permanent {
+            if max > 18 + 10 {
+                max -= 10;
+            } else if max > 18 {
+                max = 18;
+            } else if max > 3 {
+                max -= 1;
+            }
+    
+            res = max != *self.stat_cur.get(stat).unwrap();
+        }
+
+        if res {
+            self.stat_cur.entry(*stat).and_modify(|s| { *s = cur });
+            self.stat_max.entry(*stat).and_modify(|s| { *s = max });
+            self.upkeep.update.turn_on(&(calcs::PlayerUpdate::Bonus as usize));
+            self.upkeep.redraw.turn_on(&(calcs::PlayerRedraw::Stats as usize));
+        }
+
+        res
+    }
+}
+
+pub const PLAYER_EXP: [i64; 50] = [
+    10,
+	25,
+	45,
+	70,
+	100,
+	140,
+	200,
+	280,
+	380,
+	500,
+	650,
+	850,
+	1100,
+	1400,
+	1800,
+	2300,
+	2900,
+	3600,
+	4400,
+	5400,
+	6800,
+	8400,
+	10200,
+	12500,
+	17500,
+	25000,
+	35000,
+	50000,
+	75000,
+	100000,
+	150000,
+	200000,
+	275000,
+	350000,
+	450000,
+	550000,
+	700000,
+	850000,
+	1000000,
+	1250000,
+	1500000,
+	1800000,
+	2100000,
+	2400000,
+	2700000,
+	3000000,
+	3500000,
+	4000000,
+	4500000,
+	5000000
+];

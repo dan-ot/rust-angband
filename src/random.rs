@@ -94,7 +94,7 @@ impl Random {
         self.rng.gen_range(0..excluding)
     }
 
-    pub fn randint1(mut self, including: i32) -> i32 {
+    pub fn randint1(&mut self, including: i32) -> i32 {
         self.rng.gen_range(1..=including)
     }
 

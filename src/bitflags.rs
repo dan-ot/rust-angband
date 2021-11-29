@@ -310,11 +310,11 @@ impl Bitflag {
     }
 
     /// Sets the provided flags to 'on' and all others to 'off'
-    pub fn init(&mut self, flags: Box<dyn Iterator<Item = usize>>) -> () {
+    pub fn init<T: Into<usize>>(&mut self, flags: Box<dyn Iterator<Item = T>>) -> () {
         self.wipe();
 
         for flag in flags {
-            self.turn_on(&flag);
+            self.turn_on(&(flag.into()));
         }
     }
 
