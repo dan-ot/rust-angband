@@ -10,6 +10,7 @@ pub mod flags;
 pub mod kinds;
 pub mod mods;
 pub mod tvals;
+pub mod desc;
 
 #[derive(Debug, Clone, PartialEq, PartialOrd)]
 pub enum FlagType {
@@ -35,7 +36,7 @@ pub enum FlagType {
 /// How object flags are identified
 pub enum FlagId {
     /// Normal Id on use
-    Normal = 0,
+    Normal,
     /// Obvious after time
     Timed,
     /// Obvious after wield
@@ -44,7 +45,7 @@ pub enum FlagId {
 
 #[derive(Debug, Clone, PartialEq, PartialOrd, Eq, Hash)]
 pub enum PropertyType {
-    None = 0,
+    None,
     Stat,
     Mod,
     Flag,
