@@ -8,6 +8,8 @@ edition = "2018"
 [dependencies]
 rand = {version = "0.8.4", features = ["std_rng"]}
 sdl2 = {version = "0.35.1", features = ["image", "ttf", "mixer", "static-link", "use-vcpkg"]}
+serde = {version = "1.0.132", features = ["derive"]}
+serde_json = "1.0.73"
 
 [package.metadata.vcpkg]
 dependencies = ["sdl2", "sdl2-image[libjpeg-turbo,tiff,libwebp]", "sdl2-ttf", "sdl2-gfx", "sdl2-mixer"]

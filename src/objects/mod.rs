@@ -747,7 +747,7 @@ pub struct FlavorService {
 impl FlavorService {
     pub fn assign_fixed(self: &FlavorService, k_info: &mut Vec<ObjectKind>) -> () {
         for flavor in &self.flavors {
-            if flavor.sval != tvals::SVal_Unknown {
+            if flavor.sval != tvals::SVAL_UNKNOWN {
                 for kind in k_info.iter_mut() {
                     if kind.tval == flavor.tval && kind.sval == flavor.sval.into() {
                         kind.flavor = Some(flavor.clone());
@@ -777,7 +777,7 @@ impl FlavorService {
     pub fn reset_fixed(self: &mut FlavorService) -> () {
         for flavor in self.flavors.iter_mut() {
             if flavor.tval != tvals::TVals::Ring && flavor.text != "Plain Gold" {
-                flavor.sval = tvals::SVal_Unknown;
+                flavor.sval = tvals::SVAL_UNKNOWN;
             }
         }
     }
@@ -799,7 +799,7 @@ impl FlavorService {
                 kind.flavor = None;
             }
             for flavor in self.flavors.iter_mut() {
-                flavor.sval = tvals::SVal_Unknown;    
+                flavor.sval = tvals::SVAL_UNKNOWN;    
             }
             //TODO: from obj-util.c, can't implement without parsers
             // cleanup_parser(parser);
