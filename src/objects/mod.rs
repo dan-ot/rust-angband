@@ -11,6 +11,7 @@ pub mod kinds;
 pub mod mods;
 pub mod tvals;
 pub mod desc;
+pub mod knowledge;
 
 #[derive(Debug, Clone, PartialEq, PartialOrd)]
 pub enum FlagType {
