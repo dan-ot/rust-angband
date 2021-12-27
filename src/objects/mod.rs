@@ -1,16 +1,23 @@
+use crate::objects::util::ScrollNameService;
+use crate::player::options::PlayerOptions;
+use std::collections::HashMap;
+use std::convert::TryInto;
+use std::iter::FromIterator;
+
+use crate::random::Random;
 use crate::bitflags::Bitflag;
 use crate::dice::Dice;
 use crate::monsters::MonsterRace;
 use crate::random::Diceroll;
 use crate::player::stats::Stats;
 use crate::types::Loc;
-use std::collections::HashMap;
 
 pub mod flags;
 pub mod kinds;
 pub mod mods;
 pub mod tvals;
 pub mod desc;
+pub mod util;
 pub mod knowledge;
 
 #[derive(Debug, Clone, PartialEq, PartialOrd)]
@@ -74,7 +81,7 @@ pub struct ObjectProperty {
 
 #[derive(Debug, Clone)]
 pub struct AllProperties {
-    pub properties: HashMap<PropertyType, Vec<ObjectProperty>>,
+    pub obj_properties: HashMap<PropertyType, Vec<ObjectProperty>>,
 }
 
 impl AllProperties {
@@ -83,7 +90,7 @@ impl AllProperties {
         obj_type: &PropertyType,
         index: &usize,
     ) -> Option<&ObjectProperty> {
-        match self.properties.get(obj_type) {
+        match self.obj_properties.get(obj_type) {
             Some(t) => t.get(*index),
             None => None,
         }
@@ -98,7 +105,7 @@ pub fn create_obj_flag_mask_by_type(
 ) -> () {
     f.wipe();
     for arg in args {
-        for prop in props.properties[&PropertyType::Flag]
+        for prop in props.obj_properties[&PropertyType::Flag]
             .iter()
             .filter(|p| p.subtype == arg)
         {
@@ -114,7 +121,7 @@ pub fn create_obj_flag_mask_by_id(
 ) -> () {
     f.wipe();
     for arg in args {
-        for prop in props.properties[&PropertyType::Flag]
+        for prop in props.obj_properties[&PropertyType::Flag]
             .iter()
             .filter(|p| p.id_type == arg)
         {
@@ -470,6 +477,19 @@ pub struct ObjectKindService {
     pub curse_object_kind: Vec<ObjectKind>,
 }
 
+impl ObjectKindService {
+    pub fn kind_set_all_aware(&mut self) -> () {
+        for kind in self.k_info.iter_mut() {
+            if kind.name.len() != 0 {
+                kind.aware = match kind.flavor {
+                    Some (_) => kind.aware,
+                    None => true
+                }
+            }
+        }
+    }
+}
+
 /// Unchanging information about artifacts.
 /// TODO: In this source, this is also a linked list.
 #[derive(Debug, Clone)]
@@ -710,15 +730,100 @@ impl Object {
 }
 
 // TODO: In the source, this is a linked list
+// A Flavor is what the the player knows about a thing until they know more about the thing
+// ...for example, an Oak Staff might be a Staff of Cure Light, Staff of Illumination, etc.
 #[derive(Debug, Clone)]
 pub struct Flavor {
     pub text: String,
     pub tval: tvals::TVals,
-    pub sval: u8,
+    pub sval: i32,
     pub d_attr: u8,
     pub d_char: char
 }
 
 pub struct FlavorService {
     pub flavors: Vec<Flavor>
+}
+
+impl FlavorService {
+    pub fn assign_fixed(self: &FlavorService, k_info: &mut Vec<ObjectKind>) -> () {
+        for flavor in &self.flavors {
+            if flavor.sval != tvals::SVAL_UNKNOWN {
+                for kind in k_info.iter_mut() {
+                    if kind.tval == flavor.tval && kind.sval == flavor.sval.into() {
+                        kind.flavor = Some(flavor.clone());
+                    }
+                }
+            }
+        }
+    }
+    
+    pub fn assign_random(self: &FlavorService, k_info: &mut Vec<ObjectKind>, random: &mut Random, scroll_adj: &Vec<String>, tval: &tvals::TVals) -> () {
+        let mut appropriate_flavors = Vec::from_iter(self.flavors.iter().filter(|f| { f.tval == *tval }));
+    
+        for kind in k_info.iter_mut() {
+            if kind.tval == *tval && kind.flavor.is_none() && appropriate_flavors.len() > 0 {
+                let choice = random.randint0(appropriate_flavors.len().try_into().unwrap());
+                let mut flavor = appropriate_flavors.swap_remove(choice.try_into().unwrap()).clone();
+                flavor.sval = kind.sval;
+                if *tval == tvals::TVals::Scroll {
+                    let i: usize = kind.sval.try_into().unwrap();
+                    flavor.text = scroll_adj[i].clone();
+                }
+                kind.flavor = Some(flavor);
+            }
+        }
+    }
+
+    pub fn reset_fixed(self: &mut FlavorService) -> () {
+        for flavor in self.flavors.iter_mut() {
+            if flavor.tval != tvals::TVals::Ring && flavor.text != "Plain Gold" {
+                flavor.sval = tvals::SVAL_UNKNOWN;
+            }
+        }
+    }
+
+    pub fn init(self: &mut FlavorService, 
+        object_kinds: &mut ObjectKindService,
+        scrolls: &mut ScrollNameService,
+        options: &PlayerOptions,
+        seed_flavor: &u64,
+        turn: i32
+        // parser: Parser (when it gets implemented)
+        // randname: Randname (when it gets implemented)
+
+    ) -> () {
+        let mut random = Random::seeded(*seed_flavor);
+
+        if turn == 1 {
+            for kind in object_kinds.k_info.iter_mut() {
+                kind.flavor = None;
+            }
+            for flavor in self.flavors.iter_mut() {
+                flavor.sval = tvals::SVAL_UNKNOWN;    
+            }
+            //TODO: from obj-util.c, can't implement without parsers
+            // cleanup_parser(parser);
+            // run_parser(parser);
+        }
+
+        // TODO: from obj-util.c, can't implement without options
+        // if options.on(BirthOptions::Randart) {
+        //  self.reset_fixed();
+        //}
+
+        self.assign_fixed(&mut object_kinds.k_info);
+
+        self.assign_random(&mut object_kinds.k_info, &mut random, &scrolls.scroll_adj, &tvals::TVals::Ring);
+        self.assign_random(&mut object_kinds.k_info, &mut random, &scrolls.scroll_adj, &tvals::TVals::Amulet);
+        self.assign_random(&mut object_kinds.k_info, &mut random, &scrolls.scroll_adj, &tvals::TVals::Staff);
+        self.assign_random(&mut object_kinds.k_info, &mut random, &scrolls.scroll_adj, &tvals::TVals::Wand);
+        self.assign_random(&mut object_kinds.k_info, &mut random, &scrolls.scroll_adj, &tvals::TVals::Rod);
+        self.assign_random(&mut object_kinds.k_info, &mut random, &scrolls.scroll_adj, &tvals::TVals::Mushroom);
+        self.assign_random(&mut object_kinds.k_info, &mut random, &scrolls.scroll_adj, &tvals::TVals::Potion);
+
+        scrolls.init(&mut random);
+        self.assign_random(&mut object_kinds.k_info, &mut random, &scrolls.scroll_adj, &tvals::TVals::Scroll);
+        object_kinds.kind_set_all_aware();
+    }
 }

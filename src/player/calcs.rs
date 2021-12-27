@@ -849,7 +849,7 @@ pub const BLOWS_TABLE: [[i32; 12]; 12] = [
     [33,  29,  26,  24,  22,  21,  20,  19,  18,  17,  16,  15]
 ];
 
-/// Decide which object comes ealiier in the standard inventory listing,
+/// Decide which object comes earlier in the standard inventory listing,
 /// defaulting to the first if nothing separates them.
 /// 
 /// Return whether to replace the original object with the new one
@@ -859,6 +859,7 @@ pub fn earlier_obj(first: Option<&Object>, second: Option<&Object>, store: bool)
             match first {
                 Some (orig) => {
                     todo!() // Need obj-util.h impelmented to continue
+
                 },
                 None => true
             }

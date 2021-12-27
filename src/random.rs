@@ -1,5 +1,5 @@
-use rand::rngs::ThreadRng;
-use rand::{thread_rng, Rng};
+use rand::rngs::StdRng;
+use rand::{SeedableRng, Rng};
 
 const NORMAL_TABLE: [i32; 256] = [
     206, 613, 1022, 1430, 1838, 2245, 2652, 3058, 3463, 3867, 4271, 4673, 5075, 5475, 5874, 6271,
@@ -46,12 +46,16 @@ impl Chance {
 }
 
 pub struct Random {
-    rng: ThreadRng,
+    rng: StdRng,
 }
 
 impl Random {
     pub fn new() -> Random {
-        Random { rng: thread_rng() }
+        Random { rng: StdRng::from_entropy() }
+    }
+
+    pub fn seeded(seed: u64) -> Random {
+        Random { rng: StdRng::seed_from_u64(seed) }
     }
 
     pub fn rand_normal(&mut self, mean: i32, stand: i32) -> i32 {

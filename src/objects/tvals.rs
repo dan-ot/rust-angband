@@ -40,6 +40,8 @@ pub enum TVals {
     Max
 }
 
+pub const SVAL_UNKNOWN: i32 = 0;
+
 impl TVals {
     pub fn name(&self) -> &str {
         match self {

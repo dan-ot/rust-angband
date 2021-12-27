@@ -11,14 +11,17 @@ pub enum RuneVariety {
 pub enum CombatRunes {
     ToA,
     ToH,
-    ToD,
-    Max
+    ToD
 }
 
 pub struct Rune {
     pub variety: RuneVariety,
     pub index: i32,
-    // TODO: Quark?
     pub note: String,
     pub name: String
 }
+
+pub struct RuneService {
+    pub rune_list: Vec<Rune>
+}
+
