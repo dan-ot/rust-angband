@@ -3,6 +3,7 @@ use sdl2::render::{Canvas, Texture};
 use sdl2::pixels::Color;
 use sdl2::rect::Rect;
 use sdl2::video::{Window as SDLWindow};
+use sdl2::ttf::Font as SDLFont;
 use std::collections::VecDeque;
 
 pub mod ui_event;
@@ -199,19 +200,16 @@ pub struct Wallpaper<'a> {
 }
 
 /// State-tracking for dragging terminals
-pub struct MoveState<'a, U, D> {
+pub struct MoveState {
     pub active: bool,
     pub moving: bool,
     
     pub originx: i32,
     pub originy: i32,
-
-    // TODO: Necessary? This feels like a circular pointer reference problem...
-    pub subwindow: Subwindow<'a, U, D>
 }
 
 /// State-tracking for resizing terminals
-pub struct SizeState<'a, U, D> {
+pub struct SizeState {
     pub active: bool,
     pub sizing: bool,
 
@@ -220,9 +218,6 @@ pub struct SizeState<'a, U, D> {
 
     pub left: bool,
     pub top: bool,
-
-    // TODO: Necessary? This feels like a circular pointer reference problem...
-    pub subwindow: Subwindow<'a, U, D>
 }
 
 pub struct SizeTuple {
@@ -230,8 +225,8 @@ pub struct SizeTuple {
     pub h: i32
 }
 
-pub struct Ttf<'a> {
-    pub handle: Font<'a>,
+pub struct Ttf<'a, 'b> {
+    pub handle: SDLFont<'a, 'b>,
     pub glyph: SizeTuple 
 }
 
@@ -242,8 +237,8 @@ pub struct FontCache<'a> {
     pub rects: Vec<Rect>
 }
 
-pub struct Font<'a> {
-    pub ttf: Ttf<'a>,
+pub struct Font<'a, 'b> {
+    pub ttf: Ttf<'a, 'b>,
     pub name: &'a str,
     pub path: &'a str,
 
@@ -254,37 +249,37 @@ pub struct Font<'a> {
     pub cache: FontCache<'a>
 }
 
-pub struct TermFlagValue<'a, U, D> {
-    pub subwindow: &'a Subwindow<'a, U, D>,
+pub struct TermFlagValue<'a, 'b, U, D> {
+    pub subwindow: &'a Subwindow<'a, 'b, U, D>,
     pub flag: u32,
 }
 
-pub struct AlphaValue<'a, U, D> {
-    pub subwindow: &'a Subwindow<'a, U, D>,
+pub struct AlphaValue<'a, 'b, U, D> {
+    pub subwindow: &'a Subwindow<'a, 'b, U, D>,
     pub real_value: i32,
     pub show_value: i32
 }
 
 // TODO: As you can see from the <'a, U, D> proliferation, we're borrowing subwindows
 // Does it make sense to index into a set instead? This feel backward.
-pub enum ButtonData<'a, U, D> {
+pub enum ButtonData<'a, 'b, U, D> {
     Invalid,
     None,
     Int (i32),
     Unsigned (u32),
-    Subwindow (&'a Subwindow<'a, U, D>),
-    Font (&'a Font<'a>),
-    TermFlag (&'a TermFlagValue<'a, U, D>),
-    Alpha (&'a AlphaValue<'a, U, D>)
+    Subwindow (&'a Subwindow<'a, 'b, U, D>),
+    Font (&'a Font<'a, 'b>),
+    TermFlag (&'a TermFlagValue<'a, 'b, U, D>),
+    Alpha (&'a AlphaValue<'a, 'b, U, D>)
 }
 
-pub struct ButtonCallbacks<'a, U, D> {
-    pub on_render: Box<dyn FnMut(&'a Window<'a, U, D>, &'a mut Button<'a, U, D>) -> ()>,
-    pub on_event: Box<dyn FnMut(&'a mut Window<'a, U, D>, &'a mut Button<'a, U, D>, &Event) -> bool>,
-    pub on_menu: Box<dyn FnMut(&'a mut Window<'a, U, D>, &'a mut Button<'a, U, D>, &mut Event, &'a mut MenuPanel<'a, U, D>) -> ()>
+pub struct ButtonCallbacks<'a, 'b, U, D> {
+    pub on_render: Box<dyn FnMut(&'a Window<'a, 'b, U, D>, &'a mut Button<'a, 'b, U, D>) -> ()>,
+    pub on_event: Box<dyn FnMut(&'a mut Window<'a, 'b, U, D>, &'a mut Button<'a, 'b, U, D>, &Event) -> bool>,
+    pub on_menu: Box<dyn FnMut(&'a mut Window<'a, 'b, U, D>, &'a mut Button<'a, 'b, U, D>, &mut Event, &'a mut MenuPanel<'a, 'b, U, D>) -> ()>
 }
 
-pub struct Button<'a, U, D> {
+pub struct Button<'a, 'b, U, D> {
     /// Selected means pressed but not released (mid-activation)
     pub selected: bool,
     /// Highlighted means focused/hovered but not pressed
@@ -295,13 +290,13 @@ pub struct Button<'a, U, D> {
     pub full_rect: Rect,
     pub inner_rect: Rect,
 
-    pub data: ButtonData<'a, U, D>,
+    pub data: ButtonData<'a,'b, U, D>,
     // TODO: Instead of function pointers and callbacks, register events for the event pipe?
-    pub callbacks: ButtonCallbacks<'a, U, D>
+    pub callbacks: ButtonCallbacks<'a,'b,  U, D>
 }
 
-pub struct ButtonBank<'a, U, D> {
-    pub buttons: Vec<Button<'a, U, D>>,
+pub struct ButtonBank<'a, 'b, U, D> {
+    pub buttons: Vec<Button<'a, 'b, U, D>>,
     
     // TODO: What's the difference between size and number?
     pub size: isize,
@@ -309,20 +304,17 @@ pub struct ButtonBank<'a, U, D> {
 }
 
 // TODO: This is also a linked list. Need to find consumers and change them, rather than optionally not linking
-pub struct MenuPanel<'a, U, D> {
+pub struct MenuPanel<'a, 'b, U, D> {
     pub rect: Rect,
-    pub button_bank: ButtonBank<'a, U, D>,
-    pub next: &'a MenuPanel<'a, U, D>
+    pub button_bank: ButtonBank<'a, 'b, U, D>,
+    pub next: &'a MenuPanel<'a, 'b, U, D>
 }
 
-pub struct StatusBar<'a, U, D> {
-    pub font: Font<'a>,
+pub struct StatusBar<'a, 'b, U, D> {
+    pub font: Font<'a, 'b>,
 
-    pub button_bank: ButtonBank<'a, U, D>,
-    pub menu_panel: MenuPanel<'a, U, D>,
-
-    // TODO: Necessary? This feels like a circular pointer reference problem...
-    pub window: Window<'a, U, D>,
+    pub button_bank: ButtonBank<'a, 'b, U, D>,
+    pub menu_panel: MenuPanel<'a, 'b, U, D>,
 
     // TODO: This set is on the Window as well. Is this a separate type composed into these?
     // Is this actually a copy of the ones on the window, or derived?
@@ -345,7 +337,7 @@ pub struct Graphics<'a> {
     pub overdraw_max: i32
 }
 
-pub struct Subwindow<'a, U, D> {
+pub struct Subwindow<'a, 'b, U, D> {
     pub inited: bool,
     pub loaded: bool,
     pub linked: bool,
@@ -380,15 +372,15 @@ pub struct Subwindow<'a, U, D> {
 
     pub borders: SubwindowBorder,
     pub texutre: Texture<'a>,
-    pub font: Font<'a>,
+    pub font: Font<'a, 'b>,
 
     // TODO: Are these circular references?
-    pub winow: Window<'a, U, D>,
+    pub winow: Window<'a, 'b, U, D>,
     pub term: Terminal<U, D>
 }
 
 /// A real window on screen, with one or more subwindows in it
-pub struct Window<'a, U, D> {
+pub struct Window<'a, 'b, U, D> {
     pub inited: bool,
     pub loaded: bool,
 
@@ -426,10 +418,10 @@ pub struct Window<'a, U, D> {
     pub pixelformat: i16,
 
     pub wallpaper: Wallpaper<'a>,
-    pub move_state: MoveState<'a, U, D>,
-    pub size_state: SizeState<'a, U, D>,
-    pub status_bar: StatusBar<'a, U, D>,
+    pub move_state: MoveState,
+    pub size_state: SizeState,
+    pub status_bar: StatusBar<'a, 'b, U, D>,
     pub graphics: Graphics<'a>,
 
-    pub subwindows: Vec<Subwindow<'a, U, D>>
+    pub subwindows: Vec<Subwindow<'a, 'b, U, D>>
 }
