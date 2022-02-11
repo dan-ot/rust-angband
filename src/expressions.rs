@@ -8,7 +8,7 @@ pub enum ExpressionOperator {
     Sub,
     Mul,
     Div,
-    Neg
+    Neg,
 }
 
 pub fn operator_from_token(token: &str) -> ExpressionOperator {
@@ -18,7 +18,7 @@ pub fn operator_from_token(token: &str) -> ExpressionOperator {
         "*" => ExpressionOperator::Mul,
         "/" => ExpressionOperator::Div,
         "n" | "N" => ExpressionOperator::Neg,
-        _ => ExpressionOperator::None
+        _ => ExpressionOperator::None,
     }
 }
 
@@ -29,7 +29,7 @@ pub fn input_for_operator(operator: &ExpressionOperator) -> ExpressionParserInpu
         | ExpressionOperator::Sub
         | ExpressionOperator::Mul
         | ExpressionOperator::Div => ExpressionParserInput::NeedsOperands,
-        ExpressionOperator::Neg => ExpressionParserInput::UnaryOperator
+        ExpressionOperator::Neg => ExpressionParserInput::UnaryOperator,
     }
 }
 
@@ -43,14 +43,14 @@ pub enum ExpressionParserState {
     ErrDivideByZero = -5,
     Start = 0,
     Operator = 1,
-    Operand = 2
+    Operand = 2,
 }
 
 pub enum ExpressionParserInput {
     Invalid,
     NeedsOperands,
     UnaryOperator,
-    Value
+    Value,
 }
 
 const DELIMITER: &str = " ";
@@ -58,7 +58,7 @@ const DELIMITER: &str = " ";
 #[derive(Debug, Copy, Clone)]
 pub struct ExpressionOperation {
     operator: ExpressionOperator,
-    operand: i32
+    operand: i32,
 }
 
 pub struct Expression {
@@ -66,22 +66,26 @@ pub struct Expression {
     /// and provide that context to the expression...
     base_value: Option<Box<dyn Fn() -> i32>>,
 
-    operations: Vec<ExpressionOperation>
+    operations: Vec<ExpressionOperation>,
 }
 
 impl Debug for Expression {
-    fn fmt(&self, _: &mut std::fmt::Formatter<'_>) -> std::result::Result<(), std::fmt::Error> { todo!() }
+    fn fmt(&self, _: &mut std::fmt::Formatter<'_>) -> std::result::Result<(), std::fmt::Error> {
+        todo!()
+    }
 }
 
 impl Clone for Expression {
-    fn clone(&self) -> Self { todo!() }
+    fn clone(&self) -> Self {
+        todo!()
+    }
 }
 
 impl Expression {
     pub fn new() -> Expression {
         Expression {
             base_value: None,
-            operations: vec!()
+            operations: vec![],
         }
     }
 
@@ -93,18 +97,16 @@ impl Expression {
         self.operations.iter().fold(
             match &self.base_value {
                 Some(f) => f(),
-                None => 0
+                None => 0,
             },
-            |prev, op| {
-                match op.operator {
-                    ExpressionOperator::None => prev,
-                    ExpressionOperator::Add => prev + op.operand,
-                    ExpressionOperator::Div => prev / op.operand,
-                    ExpressionOperator::Mul => prev * op.operand,
-                    ExpressionOperator::Neg => -prev,
-                    ExpressionOperator::Sub => prev - op.operand
-                }
-            }
+            |prev, op| match op.operator {
+                ExpressionOperator::None => prev,
+                ExpressionOperator::Add => prev + op.operand,
+                ExpressionOperator::Div => prev / op.operand,
+                ExpressionOperator::Mul => prev * op.operand,
+                ExpressionOperator::Neg => -prev,
+                ExpressionOperator::Sub => prev - op.operand,
+            },
         )
     }
 
@@ -127,7 +129,10 @@ impl Expression {
 
         // TODO: this should probably be iterating over regex matches or something more specific
         for delimited in string.split(DELIMITER) {
-            let chars = delimited.chars().take_while(|c| c.is_digit(10)).collect::<String>();
+            let chars = delimited
+                .chars()
+                .take_while(|c| c.is_digit(10))
+                .collect::<String>();
             if chars.is_empty() {
                 parsed_operator = operator_from_token(delimited);
                 current_input = input_for_operator(&parsed_operator);
@@ -148,17 +153,17 @@ impl Expression {
                 | ExpressionParserState::ErrInvalidOperator
                 | ExpressionParserState::ErrGeneric => {
                     return state as i32;
-                },
+                }
                 ExpressionParserState::Start => {
                     self.append_operation(ExpressionOperation {
                         operator: parsed_operator,
-                        operand: 0
+                        operand: 0,
                     });
                     count += 1;
-                },
+                }
                 ExpressionParserState::Operator => {
                     current_operator = parsed_operator;
-                },
+                }
                 ExpressionParserState::Operand => {
                     if current_operator == ExpressionOperator::Div && value == 0 {
                         return ExpressionParserState::ErrDivideByZero as i32;
@@ -171,27 +176,30 @@ impl Expression {
     }
 }
 
-fn next_state(state: &ExpressionParserState, input: &ExpressionParserInput) -> ExpressionParserState {
+fn next_state(
+    state: &ExpressionParserState,
+    input: &ExpressionParserInput,
+) -> ExpressionParserState {
     match state {
         ExpressionParserState::Start => match input {
             ExpressionParserInput::Invalid => ExpressionParserState::ErrInvalidOperator,
             ExpressionParserInput::NeedsOperands => ExpressionParserState::Operator,
             ExpressionParserInput::UnaryOperator => ExpressionParserState::Start,
-            ExpressionParserInput::Value => ExpressionParserState::ErrExpectedOperator
+            ExpressionParserInput::Value => ExpressionParserState::ErrExpectedOperator,
         },
         ExpressionParserState::Operator => match input {
             ExpressionParserInput::Invalid => ExpressionParserState::ErrInvalidOperator,
             ExpressionParserInput::NeedsOperands => ExpressionParserState::ErrExpectedOperand,
             ExpressionParserInput::UnaryOperator => ExpressionParserState::ErrExpectedOperand,
-            ExpressionParserInput::Value => ExpressionParserState::Operand
+            ExpressionParserInput::Value => ExpressionParserState::Operand,
         },
         ExpressionParserState::Operand => match input {
             ExpressionParserInput::Invalid => ExpressionParserState::ErrInvalidOperator,
             ExpressionParserInput::NeedsOperands => ExpressionParserState::Operator,
             ExpressionParserInput::UnaryOperator => ExpressionParserState::Start,
-            ExpressionParserInput::Value => ExpressionParserState::Operand
+            ExpressionParserInput::Value => ExpressionParserState::Operand,
         },
         // Passthrough for the various error states. Once errored, we're errored.
-        other => *other
+        other => *other,
     }
 }

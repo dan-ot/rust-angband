@@ -1,3 +1,1 @@
-pub struct ui_event {
-    
-}
+pub struct ui_event {}

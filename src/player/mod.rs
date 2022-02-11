@@ -1,19 +1,19 @@
-use crate::random::Random;
+use crate::bitflags::Bitflag;
 use crate::cave::Chunk;
-use crate::types::Loc;
 use crate::monsters::Monster;
-use crate::objects::{Elements, ElementInfo, Object, Effect, ObjectKind};
+use crate::monsters::MonsterRace;
 use crate::objects::mods::ObjMods;
 use crate::objects::tvals::TVals;
-use crate::bitflags::Bitflag;
+use crate::objects::{Effect, ElementInfo, Elements, Object, ObjectKind};
 use crate::player::stats::Stats;
+use crate::random::Random;
+use crate::types::Loc;
 use std::collections::HashMap;
-use crate::monsters::MonsterRace;
 
-pub mod stats;
+pub mod calcs;
 pub mod history;
 pub mod options;
-pub mod calcs;
+pub mod stats;
 
 pub enum PlayerFlags {
     None = 0,
@@ -33,7 +33,7 @@ pub enum PlayerFlags {
     Steal,
     ShieldBash,
     Evil,
-    CombatRegen
+    CombatRegen,
 }
 
 pub const STAT_RANGE: usize = 38;
@@ -44,7 +44,7 @@ pub const MAX_LEVEL: usize = 50;
 pub enum SpellFlags {
     SpellLearned,
     SpellWorked,
-    SpellForgotten
+    SpellForgotten,
 }
 
 pub const BTH_PLUS_ADJ: usize = 3;
@@ -52,7 +52,7 @@ pub const BTH_PLUS_ADJ: usize = 3;
 pub enum Cheater {
     Wizard,
     Debug,
-    Jumping
+    Jumping,
 }
 
 pub enum Digging {
@@ -60,7 +60,7 @@ pub enum Digging {
     Magma,
     Quartz,
     Granite,
-    Doors
+    Doors,
 }
 
 pub enum Skills {
@@ -73,7 +73,7 @@ pub enum Skills {
     ToHitMelee,
     ToHitBow,
     ToHitThrow,
-    Digging
+    Digging,
 }
 
 // TODO: This is also a linked list in the source
@@ -82,20 +82,20 @@ pub struct Quest {
     pub name: String,
     /// Dungeon level
     pub level: i8,
-    pub race: MonsterRace
+    pub race: MonsterRace,
 }
 
 pub struct EquipSlot {
     // TODO: This is probably an enum
     pub eq_type: u16,
     pub name: String,
-    pub obj: Object
+    pub obj: Object,
 }
 
 // TODO: This is also a linked list in the source
 pub struct PlayerBody {
     pub name: String,
-    pub slots: Vec<EquipSlot>
+    pub slots: Vec<EquipSlot>,
 }
 
 pub struct PlayerRace {
@@ -131,7 +131,7 @@ pub struct PlayerRace {
     pub pflags: Bitflag,
 
     pub history: Vec<HistoryChart>,
-    pub el_info: HashMap<Elements, ElementInfo>
+    pub el_info: HashMap<Elements, ElementInfo>,
 }
 
 pub struct PlayerShape {
@@ -154,9 +154,9 @@ pub struct PlayerShape {
 
     pub effects: Vec<Effect>,
 
-    // Each player_blow from the source is just a name and a pointer to the next. 
+    // Each player_blow from the source is just a name and a pointer to the next.
     // A Vec<> also lets us fetch the length/count of the set, replacing num_blows.
-    pub blows: Vec<String>
+    pub blows: Vec<String>,
 }
 
 pub struct StartItem {
@@ -166,7 +166,7 @@ pub struct StartItem {
     pub min: i32,
     pub max: i32,
     /// Exclusion indices - which birth options will exclude this item...
-    pub eopts: Vec<i32>
+    pub eopts: Vec<i32>,
 }
 
 pub struct MagicRealm {
@@ -175,7 +175,7 @@ pub struct MagicRealm {
     pub stat: Stats,
     pub verb: String,
     pub spell_noun: String,
-    pub book_noun: String
+    pub book_noun: String,
 }
 
 pub struct ClassSpell {
@@ -195,7 +195,7 @@ pub struct ClassSpell {
     pub slevel: i32,
     pub smana: i32,
     pub sfail: i32,
-    pub sexp: i32
+    pub sexp: i32,
 }
 
 pub struct ClassBook {
@@ -204,7 +204,7 @@ pub struct ClassBook {
     pub sval: i32,
     pub dungeon: bool,
     pub realm: MagicRealm,
-    pub spells: Vec<ClassSpell>
+    pub spells: Vec<ClassSpell>,
 }
 
 pub struct ClassMagic {
@@ -237,7 +237,7 @@ pub struct PlayerClass {
     pub att_multiply: i32,
 
     pub start_items: Vec<StartItem>,
-    pub magic: Option<ClassMagic>
+    pub magic: Option<ClassMagic>,
 }
 
 pub struct PlayerAbility {
@@ -247,29 +247,29 @@ pub struct PlayerAbility {
     pub name: String,
     pub desc: String,
     pub group: i32,
-    pub value: i32
+    pub value: i32,
 }
 
 pub struct HistoryEntry {
     pub succ: HistoryChart,
     pub isucc: i32,
     pub roll: i32,
-    pub text: String
+    pub text: String,
 }
 
 /// Histories are a graph of History Charts; each chart contains a set of
 /// individual entries for that chart, and each entyr contains a text description
 /// and a successor chart to move history generation to.
-/// 
+///
 /// History generation works by walking the graph from the starting chart
 /// for each race, picking a random entry (with weighted probability) each time.
 pub struct HistoryChart {
     pub entries: Vec<HistoryEntry>,
-    pub idx: u16
+    pub idx: u16,
 }
 
 pub struct PlayerHistory {
-    pub entries: Vec<history::HistoryInfo>
+    pub entries: Vec<history::HistoryInfo>,
 }
 
 /// All the variable state that changes when you put on/take off equipment.
@@ -286,7 +286,7 @@ pub struct PlayerState {
     pub stat_top: HashMap<Stats, i32>,
 
     pub skills: HashMap<Skills, i32>,
-    
+
     pub speed: i32,
 
     /// Number of blows in hundredths
@@ -324,7 +324,7 @@ pub struct PlayerState {
     pub flags: Bitflag,
     /// PlayerFlags
     pub pflags: Bitflag,
-    pub el_info: HashMap<Elements, ElementInfo>
+    pub el_info: HashMap<Elements, ElementInfo>,
 }
 
 /// Temporary, derived, player-related variables used during play but not saved
@@ -374,15 +374,15 @@ pub struct PlayerUpkeep {
     pub inven_cnt: i32,
     pub equip_cnt: i32,
     pub quiver_cnt: i32,
-    pub recharge_pow: i32
+    pub recharge_pow: i32,
 }
 
 /// Most of the "player" information goes here.
-/// 
+///
 /// This structure gives us a large collection of layer variables.
-/// 
+///
 /// This entire structure is whiped when a new character is born.
-/// 
+///
 /// This structure is more or less laid out so that the information which must be stored
 /// in the savefile precedes all the information which can be recomputed as needed.
 pub struct Player {
@@ -473,25 +473,28 @@ pub struct Player {
 
     pub state: PlayerState,
     pub known_state: PlayerState,
-    pub upkeep: PlayerUpkeep
+    pub upkeep: PlayerUpkeep,
 }
 
 impl Player {
     pub fn stat_inc(&mut self, random: &mut Random, stat: &Stats) -> bool {
-        let v = *self.stat_cur.get(stat).expect("Unrecognized stat for stat increase!"); // Stats are a closed set, so this should never panic.
+        let v = *self
+            .stat_cur
+            .get(stat)
+            .expect("Unrecognized stat for stat increase!"); // Stats are a closed set, so this should never panic.
 
         if v >= 18 + 100 {
             false
         } else {
             if v < 18 {
-                self.stat_cur.entry(*stat).and_modify(|s| { *s += 1 });
+                self.stat_cur.entry(*stat).and_modify(|s| *s += 1);
             } else if v < 18 + 90 {
                 let mut gain = (((18 + 100) - v) / 2 + 3) / 2;
                 if gain < 1 {
                     gain = 1;
                 }
 
-                self.stat_cur.entry(*stat).and_modify(|s| { 
+                self.stat_cur.entry(*stat).and_modify(|s| {
                     let added = (random.randint1(gain as i32) as i16) + gain / 2;
                     if *s + added > 18 + 99 {
                         *s = 18 + 99
@@ -500,15 +503,17 @@ impl Player {
                     }
                 });
             } else {
-                self.stat_cur.entry(*stat).and_modify(|s| { *s = 18 + 100 });
-            }
-    
-            let nowits = *self.stat_cur.get(stat).unwrap();
-            if nowits > *self.stat_max.get(stat).unwrap() {
-                self.stat_max.entry(*stat).and_modify(|s| { *s = nowits });
+                self.stat_cur.entry(*stat).and_modify(|s| *s = 18 + 100);
             }
 
-            self.upkeep.update.turn_on(&(calcs::PlayerUpdate::Bonus as usize));
+            let nowits = *self.stat_cur.get(stat).unwrap();
+            if nowits > *self.stat_max.get(stat).unwrap() {
+                self.stat_max.entry(*stat).and_modify(|s| *s = nowits);
+            }
+
+            self.upkeep
+                .update
+                .turn_on(&(calcs::PlayerUpdate::Bonus as usize));
 
             true
         }
@@ -537,15 +542,19 @@ impl Player {
             } else if max > 3 {
                 max -= 1;
             }
-    
+
             res = max != *self.stat_cur.get(stat).unwrap();
         }
 
         if res {
-            self.stat_cur.entry(*stat).and_modify(|s| { *s = cur });
-            self.stat_max.entry(*stat).and_modify(|s| { *s = max });
-            self.upkeep.update.turn_on(&(calcs::PlayerUpdate::Bonus as usize));
-            self.upkeep.redraw.turn_on(&(calcs::PlayerRedraw::Stats as usize));
+            self.stat_cur.entry(*stat).and_modify(|s| *s = cur);
+            self.stat_max.entry(*stat).and_modify(|s| *s = max);
+            self.upkeep
+                .update
+                .turn_on(&(calcs::PlayerUpdate::Bonus as usize));
+            self.upkeep
+                .redraw
+                .turn_on(&(calcs::PlayerRedraw::Stats as usize));
         }
 
         res
@@ -553,54 +562,8 @@ impl Player {
 }
 
 pub const PLAYER_EXP: [i64; 50] = [
-    10,
-	25,
-	45,
-	70,
-	100,
-	140,
-	200,
-	280,
-	380,
-	500,
-	650,
-	850,
-	1100,
-	1400,
-	1800,
-	2300,
-	2900,
-	3600,
-	4400,
-	5400,
-	6800,
-	8400,
-	10200,
-	12500,
-	17500,
-	25000,
-	35000,
-	50000,
-	75000,
-	100000,
-	150000,
-	200000,
-	275000,
-	350000,
-	450000,
-	550000,
-	700000,
-	850000,
-	1000000,
-	1250000,
-	1500000,
-	1800000,
-	2100000,
-	2400000,
-	2700000,
-	3000000,
-	3500000,
-	4000000,
-	4500000,
-	5000000
+    10, 25, 45, 70, 100, 140, 200, 280, 380, 500, 650, 850, 1100, 1400, 1800, 2300, 2900, 3600,
+    4400, 5400, 6800, 8400, 10200, 12500, 17500, 25000, 35000, 50000, 75000, 100000, 150000,
+    200000, 275000, 350000, 450000, 550000, 700000, 850000, 1000000, 1250000, 1500000, 1800000,
+    2100000, 2400000, 2700000, 3000000, 3500000, 4000000, 4500000, 5000000,
 ];

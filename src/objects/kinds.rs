@@ -15,5 +15,5 @@ pub enum KindFlags {
     ShootsArrows,
     ShootsBolts,
     RandBaseRes,
-    RandResPower
+    RandResPower,
 }

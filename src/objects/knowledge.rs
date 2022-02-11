@@ -5,23 +5,22 @@ pub enum RuneVariety {
     Brand,
     Slay,
     Curse,
-    Flag
+    Flag,
 }
 
 pub enum CombatRunes {
     ToA,
     ToH,
-    ToD
+    ToD,
 }
 
 pub struct Rune {
     pub variety: RuneVariety,
     pub index: i32,
     pub note: String,
-    pub name: String
+    pub name: String,
 }
 
 pub struct RuneService {
-    pub rune_list: Vec<Rune>
+    pub rune_list: Vec<Rune>,
 }
-

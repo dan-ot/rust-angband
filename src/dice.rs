@@ -1,15 +1,15 @@
 // Dice in this context is the representation of a potential roll. They are not involved in the actual randomness -
-// that comes from RandomValue from the Random module. This part 
+// that comes from RandomValue from the Random module. This part
 
-use crate::random::Aspect;
-use crate::random::Random;
-use crate::random::Diceroll;
 use crate::expressions::Expression;
+use crate::random::Aspect;
+use crate::random::Diceroll;
+use crate::random::Random;
 
 #[derive(Debug, Clone)]
 pub enum ExpressionOrValue {
-    Expression (Expression),
-    Value (i32)
+    Expression(Expression),
+    Value(i32),
 }
 
 #[derive(Debug, Clone)]
@@ -21,7 +21,7 @@ pub struct Dice {
     /// Number of sides per die
     y: ExpressionOrValue,
     /// Bonus on the roll
-    m: ExpressionOrValue
+    m: ExpressionOrValue,
 }
 
 pub enum DiceState {
@@ -39,22 +39,22 @@ pub enum DiceState {
     VarChar,    // L
     FlushAll,   // M
     /// We're done
-    Max         // N, .  
+    Max, // N, .
 }
 
 pub enum DiceInput {
-    Amp,        // &
-    Minus,      // -
-    Base,       // +
-    Dice,       // d
-    Bonus,      // M, m
-    Var,        // $
-    Digit,      // D
-    Upper,      // U
+    Amp,   // &
+    Minus, // -
+    Base,  // +
+    Dice,  // d
+    Bonus, // M, m
+    Var,   // $
+    Digit, // D
+    Upper, // U
     // TODO: This is null-terminated strings?
-    Null,       // 0
+    Null, // 0
     // TODO: Max == Error?
-    Max
+    Max,
 }
 
 fn input_for_char(c: &char) -> DiceInput {
@@ -68,7 +68,7 @@ fn input_for_char(c: &char) -> DiceInput {
         '\0' => DiceInput::Null,
         '0'..='9' => DiceInput::Digit,
         'A'..='Z' => DiceInput::Upper,
-        _ => DiceInput::Max
+        _ => DiceInput::Max,
     }
 }
 
@@ -80,59 +80,59 @@ fn state_transition(state: &DiceState, input: &DiceInput) -> DiceState {
             DiceInput::Bonus => DiceState::Bonus,
             DiceInput::Var => DiceState::Var,
             DiceInput::Digit => DiceState::BaseDigit,
-            _ => DiceState::Max
+            _ => DiceState::Max,
         },
         DiceState::BaseDigit => match input {
             DiceInput::Base => DiceState::FlushBase,
             DiceInput::Dice => DiceState::FlushDice,
             DiceInput::Digit => DiceState::BaseDigit,
             DiceInput::Null => DiceState::FlushBase,
-            _ => DiceState::Max
+            _ => DiceState::Max,
         },
         DiceState::FlushBase => match input {
             DiceInput::Dice => DiceState::FlushDice,
             DiceInput::Bonus => DiceState::Bonus,
             DiceInput::Var => DiceState::Var,
             DiceInput::Digit => DiceState::DiceDigit,
-            _ => DiceState::Max
+            _ => DiceState::Max,
         },
         DiceState::DiceDigit => match input {
             DiceInput::Dice => DiceState::FlushDice,
             DiceInput::Digit => DiceState::DiceDigit,
-            _ => DiceState::Max
+            _ => DiceState::Max,
         },
         DiceState::FlushDice => match input {
             DiceInput::Var => DiceState::Var,
             DiceInput::Digit => DiceState::SideDigit,
-            _ => DiceState::Max
+            _ => DiceState::Max,
         },
         DiceState::SideDigit => match input {
             DiceInput::Amp => DiceState::FlushSide,
             DiceInput::Bonus => DiceState::Bonus,
             DiceInput::Digit => DiceState::SideDigit,
             DiceInput::Null => DiceState::FlushSide,
-            _ => DiceState::Max
+            _ => DiceState::Max,
         },
         DiceState::FlushSide => match input {
             DiceInput::Bonus => DiceState::Bonus,
-            _ => DiceState::Max
+            _ => DiceState::Max,
         },
         DiceState::Bonus => match input {
             DiceInput::Var => DiceState::Var,
             DiceInput::Digit => DiceState::BonusDigit,
-            _ => DiceState::Max
+            _ => DiceState::Max,
         },
         DiceState::BonusDigit => match input {
             DiceInput::Digit => DiceState::BonusDigit,
             DiceInput::Null => DiceState::FlushBonus,
-            _ => DiceState::Max
+            _ => DiceState::Max,
         },
         DiceState::FlushBonus => match input {
-            _ => DiceState::Max
+            _ => DiceState::Max,
         },
         DiceState::Var => match input {
             DiceInput::Upper => DiceState::VarChar,
-            _ => DiceState::Max
+            _ => DiceState::Max,
         },
         DiceState::VarChar => match input {
             DiceInput::Amp => DiceState::FlushSide,
@@ -141,28 +141,27 @@ fn state_transition(state: &DiceState, input: &DiceInput) -> DiceState {
             DiceInput::Bonus => DiceState::Bonus,
             DiceInput::Upper => DiceState::VarChar,
             DiceInput::Null => DiceState::FlushAll,
-            _ => DiceState::Max
+            _ => DiceState::Max,
         },
-        DiceState::FlushAll
-        | DiceState::Max => DiceState::Max
+        DiceState::FlushAll | DiceState::Max => DiceState::Max,
     }
 }
 
 impl Dice {
     pub fn new() -> Dice {
         Dice {
-            b: ExpressionOrValue::Value (0),
-            x: ExpressionOrValue::Value (0),
-            m: ExpressionOrValue::Value (0),
-            y: ExpressionOrValue::Value (0)
+            b: ExpressionOrValue::Value(0),
+            x: ExpressionOrValue::Value(0),
+            m: ExpressionOrValue::Value(0),
+            y: ExpressionOrValue::Value(0),
         }
     }
 
     pub fn reset(&mut self) -> () {
-        self.b = ExpressionOrValue::Value (0);
-        self.x = ExpressionOrValue::Value (0);
-        self.m = ExpressionOrValue::Value (0);
-        self.y = ExpressionOrValue::Value (0);
+        self.b = ExpressionOrValue::Value(0);
+        self.x = ExpressionOrValue::Value(0);
+        self.m = ExpressionOrValue::Value(0);
+        self.y = ExpressionOrValue::Value(0);
     }
 
     // /// Adds an expression under a given name. Original returned an int index,
@@ -174,12 +173,12 @@ impl Dice {
     /// Load the Dice with the values from the input. Returns true if successful.
     pub fn parse_string(&mut self, string: &str) -> bool {
         let mut state = DiceState::Start;
-        let mut token: Vec<char> = vec!();
+        let mut token: Vec<char> = vec![];
 
         if string.is_empty() {
             return false;
         }
-        
+
         self.reset();
 
         for (current, ch) in string.char_indices() {
@@ -197,18 +196,14 @@ impl Dice {
                 | DiceInput::Base
                 | DiceInput::Dice
                 | DiceInput::Var
-                | DiceInput::Null => {
-                    state_transition(&state, &input_type)
-                },
+                | DiceInput::Null => state_transition(&state, &input_type),
 
-                DiceInput::Minus
-                | DiceInput::Digit
-                | DiceInput::Upper => {
+                DiceInput::Minus | DiceInput::Digit | DiceInput::Upper => {
                     token.push(ch);
                     state_transition(&state, &input_type)
-                },
+                }
 
-                _ => state
+                _ => state,
             };
 
             state = match ch {
@@ -216,72 +211,76 @@ impl Dice {
                     DiceState::Var | DiceState::VarChar => {
                         token.push(ch);
                         state_transition(&state, &DiceInput::Upper)
-                    },
-                    _ => state_transition(&state, &DiceInput::Bonus)
+                    }
+                    _ => state_transition(&state, &DiceInput::Bonus),
                 },
                 'm' => state_transition(&state, &DiceInput::Bonus),
-                _ => state
+                _ => state,
             };
 
             let flush = match state {
                 DiceState::FlushBase => {
                     last_seen = LastSeen::Base;
                     true
-                },
+                }
                 DiceState::FlushDice => {
                     last_seen = LastSeen::Dice;
                     true
-                },
+                }
                 DiceState::FlushSide => {
                     last_seen = LastSeen::Side;
                     true
-                },
+                }
                 DiceState::FlushBonus => {
                     last_seen = LastSeen::Bonus;
                     true
-                },
+                }
                 DiceState::FlushAll => {
                     last_seen = match last_seen {
                         LastSeen::None => LastSeen::Base,
                         LastSeen::Base => LastSeen::Dice,
                         LastSeen::Dice => LastSeen::Side,
                         LastSeen::Side => LastSeen::Bonus,
-                        LastSeen::Bonus => LastSeen::Bonus
+                        LastSeen::Bonus => LastSeen::Bonus,
                     };
                     true
-                },
+                }
                 DiceState::Bonus => {
-                    last_seen = if last_seen == LastSeen::Dice { LastSeen::Side } else { LastSeen::Bonus };
+                    last_seen = if last_seen == LastSeen::Dice {
+                        LastSeen::Side
+                    } else {
+                        LastSeen::Bonus
+                    };
                     true
                 }
-                _ => false
+                _ => false,
             };
 
             if flush && token.len() > 0 {
                 let as_str = token.iter().collect::<String>();
-                let value = match as_str.parse::<i32>() {  
-                    Ok (val) => ExpressionOrValue::Value (val),
-                    Err (_) => {
+                let value = match as_str.parse::<i32>() {
+                    Ok(val) => ExpressionOrValue::Value(val),
+                    Err(_) => {
                         let mut exp = Expression::new();
                         exp.append_operations_string(as_str.as_str());
-                        ExpressionOrValue::Expression (exp)
+                        ExpressionOrValue::Expression(exp)
                     }
                 };
 
                 match last_seen {
                     LastSeen::Base => {
                         self.b = value;
-                    },
+                    }
                     LastSeen::Dice => {
                         self.x = value;
-                    },
+                    }
                     LastSeen::Side => {
                         self.y = value;
-                    },
+                    }
                     LastSeen::Bonus => {
                         self.m = value;
-                    },
-                    LastSeen::None => ()
+                    }
+                    LastSeen::None => (),
                 }
 
                 token.clear();
@@ -295,21 +294,21 @@ impl Dice {
     pub fn random_value(&self) -> Diceroll {
         Diceroll::new(
             match &self.b {
-                ExpressionOrValue::Value (v) => *v,
-                ExpressionOrValue::Expression (e) => e.evaluate()
+                ExpressionOrValue::Value(v) => *v,
+                ExpressionOrValue::Expression(e) => e.evaluate(),
             },
             match &self.x {
-                ExpressionOrValue::Value (v) => *v,
-                ExpressionOrValue::Expression (e) => e.evaluate()
+                ExpressionOrValue::Value(v) => *v,
+                ExpressionOrValue::Expression(e) => e.evaluate(),
             },
             match &self.y {
-                ExpressionOrValue::Value (v) => *v,
-                ExpressionOrValue::Expression (e) => e.evaluate()
+                ExpressionOrValue::Value(v) => *v,
+                ExpressionOrValue::Expression(e) => e.evaluate(),
             },
             match &self.m {
-                ExpressionOrValue::Value (v) => *v,
-                ExpressionOrValue::Expression (e) => e.evaluate()
-            }
+                ExpressionOrValue::Value(v) => *v,
+                ExpressionOrValue::Expression(e) => e.evaluate(),
+            },
         )
     }
 
@@ -333,5 +332,5 @@ enum LastSeen {
     Base,
     Dice,
     Side,
-    Bonus
+    Bonus,
 }

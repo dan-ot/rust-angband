@@ -37,7 +37,7 @@ pub enum TVals {
     ShadowBook,
     OtherBook,
     Gold,
-    Max
+    Max,
 }
 
 pub const SVAL_UNKNOWN: i32 = 0;
@@ -81,7 +81,7 @@ impl TVals {
             TVals::ShadowBook => "shadow book",
             TVals::OtherBook => "other book",
             TVals::Gold => "gold",
-            TVals::Max => ""
+            TVals::Max => "",
         }
     }
 
@@ -103,7 +103,7 @@ impl TVals {
             TVals::Light => 3,
             TVals::Amulet => 3,
             TVals::Ring => 3,
-            _ => 0
+            _ => 0,
         }
     }
 }

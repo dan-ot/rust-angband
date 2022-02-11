@@ -1,17 +1,17 @@
-mod events;
-mod types;
-mod random;
-mod objects;
 mod bitflags;
-mod expressions;
-mod dice;
-mod player;
-mod monsters;
-mod colors;
-mod messages;
 mod cave;
-mod ui;
+mod colors;
+mod dice;
 mod engine;
+mod events;
+mod expressions;
+mod messages;
+mod monsters;
+mod objects;
+mod player;
+mod random;
+mod types;
+mod ui;
 
 fn main() {
     let context = sdl2::init().unwrap();

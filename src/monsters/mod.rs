@@ -1,8 +1,4 @@
 #[derive(Debug, Clone)]
-pub struct MonsterRace {
+pub struct MonsterRace {}
 
-}
-
-pub struct Monster {
-    
-}
+pub struct Monster {}

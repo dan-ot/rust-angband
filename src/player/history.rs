@@ -1,3 +1,1 @@
-pub struct HistoryInfo {
-    
-}
+pub struct HistoryInfo {}

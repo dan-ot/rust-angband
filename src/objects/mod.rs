@@ -4,21 +4,21 @@ use std::collections::HashMap;
 use std::convert::TryInto;
 use std::iter::FromIterator;
 
-use crate::random::Random;
 use crate::bitflags::Bitflag;
 use crate::dice::Dice;
 use crate::monsters::MonsterRace;
-use crate::random::Diceroll;
 use crate::player::stats::Stats;
+use crate::random::Diceroll;
+use crate::random::Random;
 use crate::types::Loc;
 
+pub mod desc;
 pub mod flags;
 pub mod kinds;
+pub mod knowledge;
 pub mod mods;
 pub mod tvals;
-pub mod desc;
 pub mod util;
-pub mod knowledge;
 
 #[derive(Debug, Clone, PartialEq, PartialOrd)]
 pub enum FlagType {
@@ -482,8 +482,8 @@ impl ObjectKindService {
         for kind in self.k_info.iter_mut() {
             if kind.name.len() != 0 {
                 kind.aware = match kind.flavor {
-                    Some (_) => kind.aware,
-                    None => true
+                    Some(_) => kind.aware,
+                    None => true,
                 }
             }
         }
@@ -724,7 +724,7 @@ impl Object {
             origin: Origin::None,
             origin_depth: 0,
             origin_race: None,
-            note: String::from("")
+            note: String::from(""),
         }
     }
 }
@@ -738,11 +738,11 @@ pub struct Flavor {
     pub tval: tvals::TVals,
     pub sval: i32,
     pub d_attr: u8,
-    pub d_char: char
+    pub d_char: char,
 }
 
 pub struct FlavorService {
-    pub flavors: Vec<Flavor>
+    pub flavors: Vec<Flavor>,
 }
 
 impl FlavorService {
@@ -757,14 +757,23 @@ impl FlavorService {
             }
         }
     }
-    
-    pub fn assign_random(self: &FlavorService, k_info: &mut Vec<ObjectKind>, random: &mut Random, scroll_adj: &Vec<String>, tval: &tvals::TVals) -> () {
-        let mut appropriate_flavors = Vec::from_iter(self.flavors.iter().filter(|f| { f.tval == *tval }));
-    
+
+    pub fn assign_random(
+        self: &FlavorService,
+        k_info: &mut Vec<ObjectKind>,
+        random: &mut Random,
+        scroll_adj: &Vec<String>,
+        tval: &tvals::TVals,
+    ) -> () {
+        let mut appropriate_flavors =
+            Vec::from_iter(self.flavors.iter().filter(|f| f.tval == *tval));
+
         for kind in k_info.iter_mut() {
             if kind.tval == *tval && kind.flavor.is_none() && appropriate_flavors.len() > 0 {
                 let choice = random.randint0(appropriate_flavors.len().try_into().unwrap());
-                let mut flavor = appropriate_flavors.swap_remove(choice.try_into().unwrap()).clone();
+                let mut flavor = appropriate_flavors
+                    .swap_remove(choice.try_into().unwrap())
+                    .clone();
                 flavor.sval = kind.sval;
                 if *tval == tvals::TVals::Scroll {
                     let i: usize = kind.sval.try_into().unwrap();
@@ -783,15 +792,14 @@ impl FlavorService {
         }
     }
 
-    pub fn init(self: &mut FlavorService, 
+    pub fn init(
+        self: &mut FlavorService,
         object_kinds: &mut ObjectKindService,
         scrolls: &mut ScrollNameService,
         options: &PlayerOptions,
         seed_flavor: &u64,
-        turn: i32
-        // parser: Parser (when it gets implemented)
-        // randname: Randname (when it gets implemented)
-
+        turn: i32, // parser: Parser (when it gets implemented)
+                   // randname: Randname (when it gets implemented)
     ) -> () {
         let mut random = Random::seeded(*seed_flavor);
 
@@ -800,7 +808,7 @@ impl FlavorService {
                 kind.flavor = None;
             }
             for flavor in self.flavors.iter_mut() {
-                flavor.sval = tvals::SVAL_UNKNOWN;    
+                flavor.sval = tvals::SVAL_UNKNOWN;
             }
             //TODO: from obj-util.c, can't implement without parsers
             // cleanup_parser(parser);
@@ -814,16 +822,56 @@ impl FlavorService {
 
         self.assign_fixed(&mut object_kinds.k_info);
 
-        self.assign_random(&mut object_kinds.k_info, &mut random, &scrolls.scroll_adj, &tvals::TVals::Ring);
-        self.assign_random(&mut object_kinds.k_info, &mut random, &scrolls.scroll_adj, &tvals::TVals::Amulet);
-        self.assign_random(&mut object_kinds.k_info, &mut random, &scrolls.scroll_adj, &tvals::TVals::Staff);
-        self.assign_random(&mut object_kinds.k_info, &mut random, &scrolls.scroll_adj, &tvals::TVals::Wand);
-        self.assign_random(&mut object_kinds.k_info, &mut random, &scrolls.scroll_adj, &tvals::TVals::Rod);
-        self.assign_random(&mut object_kinds.k_info, &mut random, &scrolls.scroll_adj, &tvals::TVals::Mushroom);
-        self.assign_random(&mut object_kinds.k_info, &mut random, &scrolls.scroll_adj, &tvals::TVals::Potion);
+        self.assign_random(
+            &mut object_kinds.k_info,
+            &mut random,
+            &scrolls.scroll_adj,
+            &tvals::TVals::Ring,
+        );
+        self.assign_random(
+            &mut object_kinds.k_info,
+            &mut random,
+            &scrolls.scroll_adj,
+            &tvals::TVals::Amulet,
+        );
+        self.assign_random(
+            &mut object_kinds.k_info,
+            &mut random,
+            &scrolls.scroll_adj,
+            &tvals::TVals::Staff,
+        );
+        self.assign_random(
+            &mut object_kinds.k_info,
+            &mut random,
+            &scrolls.scroll_adj,
+            &tvals::TVals::Wand,
+        );
+        self.assign_random(
+            &mut object_kinds.k_info,
+            &mut random,
+            &scrolls.scroll_adj,
+            &tvals::TVals::Rod,
+        );
+        self.assign_random(
+            &mut object_kinds.k_info,
+            &mut random,
+            &scrolls.scroll_adj,
+            &tvals::TVals::Mushroom,
+        );
+        self.assign_random(
+            &mut object_kinds.k_info,
+            &mut random,
+            &scrolls.scroll_adj,
+            &tvals::TVals::Potion,
+        );
 
         scrolls.init(&mut random);
-        self.assign_random(&mut object_kinds.k_info, &mut random, &scrolls.scroll_adj, &tvals::TVals::Scroll);
+        self.assign_random(
+            &mut object_kinds.k_info,
+            &mut random,
+            &scrolls.scroll_adj,
+            &tvals::TVals::Scroll,
+        );
         object_kinds.kind_set_all_aware();
     }
 }

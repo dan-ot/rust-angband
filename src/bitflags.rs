@@ -11,7 +11,7 @@ pub struct Bitflag {
     /// What's the largest value (enum + 1) that our total set of bytes will have?
     max: usize,
     /// How many u8's will it take to hold an enum with this many flags?
-    size: usize
+    size: usize,
 }
 
 /// Each set of flags is 8 bits
@@ -33,7 +33,10 @@ pub fn flag_binary(ordinal: usize) -> u8 {
 
 /// Given an ordinal, figure how how deep into the set vectors and a bitmask, so the exact value can be retrieved
 pub fn coordinates(ordinal: &usize) -> (usize, u8) {
-    ((ordinal - FLAG_START) / FLAG_WIDTH, 1 << ((ordinal - FLAG_START) & FLAG_WIDTH))
+    (
+        (ordinal - FLAG_START) / FLAG_WIDTH,
+        1 << ((ordinal - FLAG_START) & FLAG_WIDTH),
+    )
 }
 
 impl Bitflag {
@@ -44,7 +47,7 @@ impl Bitflag {
             // Start filled with all 0's
             bytes: vec![0; s],
             max: size * FLAG_WIDTH + FLAG_START,
-            size: s
+            size: s,
         }
     }
 
@@ -54,7 +57,7 @@ impl Bitflag {
             false
         } else {
             let (offset, bitmask) = coordinates(flag_at);
-    
+
             self.bytes[offset] & bitmask == bitmask
         }
     }
@@ -65,7 +68,7 @@ impl Bitflag {
             let (offset, bitmask) = coordinates(&ord);
 
             if self.bytes[offset] & bitmask == bitmask {
-                return ord
+                return ord;
             }
         }
 
@@ -92,20 +95,18 @@ impl Bitflag {
     pub fn is_empty(&self) -> bool {
         for b in &self.bytes {
             if *b != 0 {
-                return false
+                return false;
             }
         }
 
         true
- 
- 
     }
 
     /// Checks if all flags are 'on'
     pub fn is_full(&self) -> bool {
         for b in &self.bytes {
             if *b != 0b11111111 {
-                return false
+                return false;
             }
         }
 
@@ -116,7 +117,7 @@ impl Bitflag {
     pub fn intersects(&self, other: &Bitflag) -> bool {
         for i in 0..self.size {
             if self.bytes[i] & other.bytes[i] > 0 {
-                return true
+                return true;
             }
         }
 
@@ -127,7 +128,7 @@ impl Bitflag {
     pub fn has_subset(&self, other: &Bitflag) -> bool {
         for i in 0..self.size {
             if (!self.bytes[i]) & other.bytes[i] > 0 {
-                return false
+                return false;
             }
         }
 
@@ -138,7 +139,7 @@ impl Bitflag {
     pub fn is_equal(&self, other: &Bitflag) -> bool {
         for i in 0..self.size {
             if self.bytes[i] != other.bytes[i] {
-                return false
+                return false;
             }
         }
 
@@ -247,32 +248,26 @@ impl Bitflag {
 
     /// Checks if any of the iterator-supplied indices are 'on'
     pub fn any(&self, flags: Box<dyn Iterator<Item = usize>>) -> bool {
-        flags.fold(
-            false,
-            |p, c| {
-                if p == false {
-                    let (offset, bitmask) = coordinates(&c);
-                    self.bytes[offset] & bitmask > 0
-                } else {
-                    p
-                }
+        flags.fold(false, |p, c| {
+            if p == false {
+                let (offset, bitmask) = coordinates(&c);
+                self.bytes[offset] & bitmask > 0
+            } else {
+                p
             }
-        )
+        })
     }
 
     /// Checks if all of the iterator-supplied indices are 'on'
     pub fn all(&self, flags: Box<dyn Iterator<Item = usize>>) -> bool {
-        flags.fold(
-            true,
-            |p, c| {
-                if p == true {
-                    let (offset, bitmask) = coordinates(&c);
-                    !(self.bytes[offset] & bitmask) > 0
-                } else {
-                    p
-                }
+        flags.fold(true, |p, c| {
+            if p == true {
+                let (offset, bitmask) = coordinates(&c);
+                !(self.bytes[offset] & bitmask) > 0
+            } else {
+                p
             }
-        )
+        })
     }
 
     /// Sets all the incoming flag indices to 'off'. Returns true if anything changed.
@@ -322,6 +317,6 @@ impl Bitflag {
     pub fn mask(&mut self, flags: Box<dyn Iterator<Item = usize>>) -> bool {
         let mut other = Bitflag::new(self.size);
         other.init(flags);
-        self.intersect(&other)     
+        self.intersect(&other)
     }
 }

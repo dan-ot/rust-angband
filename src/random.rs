@@ -1,5 +1,5 @@
 use rand::rngs::StdRng;
-use rand::{SeedableRng, Rng};
+use rand::{Rng, SeedableRng};
 
 const NORMAL_TABLE: [i32; 256] = [
     206, 613, 1022, 1430, 1838, 2245, 2652, 3058, 3463, 3867, 4271, 4673, 5075, 5475, 5874, 6271,
@@ -51,11 +51,15 @@ pub struct Random {
 
 impl Random {
     pub fn new() -> Random {
-        Random { rng: StdRng::from_entropy() }
+        Random {
+            rng: StdRng::from_entropy(),
+        }
     }
 
     pub fn seeded(seed: u64) -> Random {
-        Random { rng: StdRng::seed_from_u64(seed) }
+        Random {
+            rng: StdRng::seed_from_u64(seed),
+        }
     }
 
     pub fn rand_normal(&mut self, mean: i32, stand: i32) -> i32 {
@@ -82,7 +86,14 @@ impl Random {
         }
     }
 
-    pub fn rand_sample(&mut self, mean: i32, upper: i32, lower: i32, stand_u: i32, stand_l: i32) -> i32 {
+    pub fn rand_sample(
+        &mut self,
+        mean: i32,
+        upper: i32,
+        lower: i32,
+        stand_u: i32,
+        stand_l: i32,
+    ) -> i32 {
         let pick = self.rand_normal(0, 1000);
 
         if pick > 0 {
@@ -222,4 +233,3 @@ impl Diceroll {
         self.resolve(rng, 0, &Aspect::MINIMIZE) != self.resolve(rng, 0, &Aspect::MAXIMIZE)
     }
 }
-

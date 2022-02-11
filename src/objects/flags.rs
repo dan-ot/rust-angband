@@ -37,14 +37,14 @@ pub enum ObjectFlags {
     Dig3,
     Explode,
     TrapImmune,
-    Throwing
+    Throwing,
 }
 
 impl ObjectFlags {
     pub fn max() -> usize {
         38
     }
-    
+
     pub fn name(&self) -> &str {
         match self {
             ObjectFlags::None => "",
@@ -84,7 +84,7 @@ impl ObjectFlags {
             ObjectFlags::Dig3 => "Dig3",
             ObjectFlags::Explode => "Expld",
             ObjectFlags::TrapImmune => "TrpIm",
-            ObjectFlags::Throwing => "Throw"
+            ObjectFlags::Throwing => "Throw",
         }
     }
 }

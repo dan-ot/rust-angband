@@ -16,5 +16,5 @@ pub enum ObjMods {
     Might,
     Light,
     DamRed,
-    Moves
+    Moves,
 }

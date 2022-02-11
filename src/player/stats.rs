@@ -4,7 +4,7 @@ pub enum Stats {
     Int,
     Wis,
     Dex,
-    Con
+    Con,
 }
 
 impl Stats {
@@ -14,18 +14,18 @@ impl Stats {
             Stats::Int => "INT",
             Stats::Wis => "WIS",
             Stats::Dex => "DEX",
-            Stats::Con => "CON"
+            Stats::Con => "CON",
         }
     }
 
     pub fn try_parse(input: &str) -> Option<Stats> {
         match input.to_lowercase().as_str() {
-            "str" => Some (Stats::Str),
-            "int" => Some (Stats::Int),
-            "wis" => Some (Stats::Wis),
-            "dex" => Some (Stats::Dex),
-            "con" => Some (Stats::Con),
-            _ => None
+            "str" => Some(Stats::Str),
+            "int" => Some(Stats::Int),
+            "wis" => Some(Stats::Wis),
+            "dex" => Some(Stats::Dex),
+            "con" => Some(Stats::Con),
+            _ => None,
         }
     }
 }
