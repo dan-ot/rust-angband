@@ -7,6 +7,7 @@ use sdl2::video::Window as SDLWindow;
 use std::collections::VecDeque;
 
 pub mod ui_event;
+pub mod graphics;
 
 // TODO: in the source, these are a linked list...
 pub struct TerminalWindow {

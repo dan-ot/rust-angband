@@ -750,7 +750,7 @@ impl FlavorService {
         for flavor in &self.flavors {
             if flavor.sval != tvals::SVAL_UNKNOWN {
                 for kind in k_info.iter_mut() {
-                    if kind.tval == flavor.tval && kind.sval == flavor.sval.into() {
+                    if kind.tval == flavor.tval && kind.sval == i32::from(flavor.sval) {
                         kind.flavor = Some(flavor.clone());
                     }
                 }

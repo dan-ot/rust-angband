@@ -1,7 +1,6 @@
 use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
 use sdl2::pixels::Color;
-use sdl2::rect::Rect;
 use sdl2::render::Canvas;
 use sdl2::video::Window;
 use sdl2::{EventPump, Sdl};
@@ -39,7 +38,12 @@ impl Engine {
             self.canvas.set_draw_color(Color::BLACK);
             self.canvas.clear();
 
-            // DRAW
+            // TODO: DRAW
+            // We'll need two things for this: a Graphics kit and a Font kit
+            // To render a screen, we'll need a buffer (term?) of graphics or font references
+            //  Maybe more than one buffer, for having a menu or 'subscreen' overlaid on the
+            //  main menu or play field
+            // We'll use these buffers to power our blits from the Graphics or Font kits
 
             self.canvas.present();
             for event in self.events.poll_iter() {
