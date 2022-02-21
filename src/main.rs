@@ -1,3 +1,5 @@
+#![warn(clippy::all)]
+
 use std::path::Path;
 
 mod bitflags;
@@ -16,14 +18,11 @@ mod types;
 mod ui;
 
 fn main() {
-    let tilesets = ui::graphics::GraphicsModeService::from_folder(Path::new("resources/tiles"));
+    let tilesets = ui::graphics::GraphicsModeService::from_folders(Path::new("resources/tiles"), Path::new("resources/fonts"));
 
-    for tile in tilesets.graphics_modes.iter() {
-        println!("{}: {:?}", tile.menuname, tile.path)
-    }
-
-    println!("Tilesets found.");
     let context = sdl2::init().unwrap();
+    let font_context = sdl2::ttf::init().unwrap();
+
     let mut engine = engine::Engine::new(&context);
     engine.run()
 }

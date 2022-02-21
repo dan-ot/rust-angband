@@ -1,5 +1,5 @@
 use std::path::{Path, PathBuf};
-use std::fs::{read_dir, read_to_string, File};
+use std::fs::{read_dir, read_to_string};
 use serde::{Deserialize};
 use serde_json;
 
@@ -27,6 +27,17 @@ pub struct GraphicsMode {
     pub path: PathBuf,
     /// Player-visible name of the tileset.
     pub menuname: String
+}
+
+pub enum FontType {
+    Vector,
+    Raster
+}
+
+pub struct FontInfo {
+    pub name: String,
+    pub path: PathBuf,
+    pub font_type: FontType
 }
 
 #[derive(Deserialize, Clone, Debug)]
@@ -68,16 +79,16 @@ impl GraphicsMode {
 // TODO: Tilesets and fonts need to resolve to the same thing - the renderer shouldn't care, it should be able to follow a map of attr/char pairs to a source coord and blend/shade setting
 pub struct GraphicsModeService<'a> {
     pub graphics_modes: Vec<GraphicsMode>,
-    pub current_graphics_mode: Option<&'a GraphicsMode>
+    pub current_graphics_mode: Option<&'a GraphicsMode>,
+    pub fonts: Vec<FontInfo>
 }
 
 impl GraphicsModeService<'_> {
     /// Read each subfolder under the given folder to see if there are Tile definitions there.
     /// If so, load them into the service
-    pub fn from_folder<'a>(folder: &Path) -> GraphicsModeService<'a> {
-        let mut vec = vec!();
-        println!("Reading {:?}", folder);
-        for (idx, dir_read) in read_dir(folder).unwrap().enumerate() {
+    pub fn from_folders<'a>(tiles_folder: &Path, fonts_folder: &Path) -> GraphicsModeService<'a> {
+        let mut tiles_vec = vec!();
+        for (idx, dir_read) in read_dir(tiles_folder).unwrap().enumerate() {
             let entry = dir_read.unwrap();
             let mut p = entry.path();
             if p.is_dir() {
@@ -85,12 +96,42 @@ impl GraphicsModeService<'_> {
                 let s = read_to_string(p).unwrap();
                 let mode: GraphicsModeJson = serde_json::from_str(&s).unwrap();
                 let gm = GraphicsMode::new(&entry.path(), idx, mode);
-                vec.push(gm);
+                tiles_vec.push(gm);
             }
         }
+
+        let mut fonts_vec = vec!();
+        for dir_read in read_dir(fonts_folder).unwrap() {
+            let entry = dir_read.unwrap();
+            let p = entry.path();
+            if p.is_file() {
+                match p.extension() {
+                    None => { },
+                    Some (os) => match os.to_str().unwrap() {
+                        ".fon" =>{ 
+                            fonts_vec.push(FontInfo {
+                                font_type: FontType::Raster,
+                                name: p.file_stem().unwrap().to_str().unwrap().to_string(),
+                                path: p
+                            })
+                        },
+                        _ => {
+                            fonts_vec.push(FontInfo {
+                                font_type: FontType::Vector,
+                                name: p.file_stem().unwrap().to_str().unwrap().to_string(),
+                                path: p
+                            })
+                        }
+                    },
+
+                }
+            }
+        }
+
         GraphicsModeService {
             current_graphics_mode: None,
-            graphics_modes: vec
+            graphics_modes: tiles_vec,
+            fonts: fonts_vec
         }
     }
 }

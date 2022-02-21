@@ -33,7 +33,7 @@ impl Engine {
         }
     }
 
-    pub fn run(&mut self) -> () {
+    pub fn run(&mut self) {
         'running: loop {
             self.canvas.set_draw_color(Color::BLACK);
             self.canvas.clear();
