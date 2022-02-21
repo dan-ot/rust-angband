@@ -513,7 +513,7 @@ impl Player {
 
             self.upkeep
                 .update
-                .turn_on(&(calcs::PlayerUpdate::Bonus as usize));
+                .turn_on(calcs::PlayerUpdate::Bonus as usize);
 
             true
         }
@@ -551,10 +551,10 @@ impl Player {
             self.stat_max.entry(*stat).and_modify(|s| *s = max);
             self.upkeep
                 .update
-                .turn_on(&(calcs::PlayerUpdate::Bonus as usize));
+                .turn_on(calcs::PlayerUpdate::Bonus as usize);
             self.upkeep
                 .redraw
-                .turn_on(&(calcs::PlayerRedraw::Stats as usize));
+                .turn_on(calcs::PlayerRedraw::Stats as usize);
         }
 
         res

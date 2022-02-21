@@ -32,7 +32,7 @@ pub fn flag_binary(ordinal: usize) -> u8 {
 }
 
 /// Given an ordinal, figure how how deep into the set vectors and a bitmask, so the exact value can be retrieved
-pub fn coordinates(ordinal: &usize) -> (usize, u8) {
+pub fn coordinates(ordinal: usize) -> (usize, u8) {
     (
         (ordinal - FLAG_START) / FLAG_WIDTH,
         1 << ((ordinal - FLAG_START) & FLAG_WIDTH),
@@ -52,8 +52,8 @@ impl Bitflag {
     }
 
     /// Tests if an ordinal is 'on' in the flag set
-    pub fn has(&self, flag_at: &usize) -> bool {
-        if FLAG_END == *flag_at {
+    pub fn has(&self, flag_at: usize) -> bool {
+        if FLAG_END == flag_at {
             false
         } else {
             let (offset, bitmask) = coordinates(flag_at);
@@ -63,9 +63,9 @@ impl Bitflag {
     }
 
     /// Returns the next 'on' ordinal in the bitflags, starting with start
-    pub fn next(&self, start: &usize) -> usize {
-        for ord in (*start)..self.max {
-            let (offset, bitmask) = coordinates(&ord);
+    pub fn next(&self, start: usize) -> usize {
+        for ord in (start)..self.max {
+            let (offset, bitmask) = coordinates(ord);
 
             if self.bytes[offset] & bitmask == bitmask {
                 return ord;
@@ -147,8 +147,8 @@ impl Bitflag {
     }
 
     /// Sets the given flag index to 'on', returns true if something changed and false if it was already on
-    pub fn turn_on(&mut self, ordinal: &usize) -> bool {
-        let (offset, bitmask) = coordinates(&ordinal);
+    pub fn turn_on(&mut self, ordinal: usize) -> bool {
+        let (offset, bitmask) = coordinates(ordinal);
 
         if self.bytes[offset] & bitmask == bitmask {
             false
@@ -160,7 +160,7 @@ impl Bitflag {
 
     /// Sets the given flag index to 'off', returns true if something changed and false if it was already off
     pub fn turn_off(&mut self, ordinal: usize) -> bool {
-        let (offset, bitmask) = coordinates(&ordinal);
+        let (offset, bitmask) = coordinates(ordinal);
 
         if self.bytes[offset] & bitmask == 0 {
             false
@@ -171,28 +171,28 @@ impl Bitflag {
     }
 
     /// Clears all flags
-    pub fn wipe(&mut self) -> () {
+    pub fn wipe(&mut self) {
         for b in self.bytes.iter_mut() {
             *b = 0b00000000;
         }
     }
 
     /// Sets all flags to 'on'
-    pub fn setall(&mut self) -> () {
+    pub fn setall(&mut self) {
         for b in self.bytes.iter_mut() {
             *b = 0b11111111;
         }
     }
 
     /// Flips all flags to the opposite of their current value
-    pub fn negate(&mut self) -> () {
+    pub fn negate(&mut self) {
         for b in self.bytes.iter_mut() {
             *b = !*b;
         }
     }
 
     /// Copies the flags from self onto other
-    pub fn copy_from(&mut self, other: &Bitflag) -> () {
+    pub fn copy_from(&mut self, other: &Bitflag) {
         for i in 0..self.size {
             self.bytes[i] = other.bytes[i];
         }
@@ -249,8 +249,8 @@ impl Bitflag {
     /// Checks if any of the iterator-supplied indices are 'on'
     pub fn any(&self, flags: Box<dyn Iterator<Item = usize>>) -> bool {
         flags.fold(false, |p, c| {
-            if p == false {
-                let (offset, bitmask) = coordinates(&c);
+            if !p {
+                let (offset, bitmask) = coordinates(c);
                 self.bytes[offset] & bitmask > 0
             } else {
                 p
@@ -261,8 +261,8 @@ impl Bitflag {
     /// Checks if all of the iterator-supplied indices are 'on'
     pub fn all(&self, flags: Box<dyn Iterator<Item = usize>>) -> bool {
         flags.fold(true, |p, c| {
-            if p == true {
-                let (offset, bitmask) = coordinates(&c);
+            if p {
+                let (offset, bitmask) = coordinates(c);
                 !(self.bytes[offset] & bitmask) > 0
             } else {
                 p
@@ -275,7 +275,7 @@ impl Bitflag {
         let mut changed = false;
 
         for flag in flags {
-            let (offset, bitmask) = coordinates(&flag);
+            let (offset, bitmask) = coordinates(flag);
 
             if self.bytes[offset] & bitmask > 0 {
                 changed = true;
@@ -292,7 +292,7 @@ impl Bitflag {
         let mut changed = false;
 
         for flag in flags {
-            let (offset, bitmask) = coordinates(&flag);
+            let (offset, bitmask) = coordinates(flag);
 
             if !(self.bytes[offset] & bitmask) > 0 {
                 changed = true;
@@ -305,11 +305,11 @@ impl Bitflag {
     }
 
     /// Sets the provided flags to 'on' and all others to 'off'
-    pub fn init<T: Into<usize>>(&mut self, flags: Box<dyn Iterator<Item = T>>) -> () {
+    pub fn init<T: Into<usize>>(&mut self, flags: Box<dyn Iterator<Item = T>>) {
         self.wipe();
 
         for flag in flags {
-            self.turn_on(&(flag.into()));
+            self.turn_on(flag.into());
         }
     }
 

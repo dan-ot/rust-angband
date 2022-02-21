@@ -102,14 +102,14 @@ pub fn create_obj_flag_mask_by_type(
     f: &mut Bitflag,
     props: &AllProperties,
     args: Box<dyn Iterator<Item = FlagType>>,
-) -> () {
+) {
     f.wipe();
     for arg in args {
         for prop in props.obj_properties[&PropertyType::Flag]
             .iter()
             .filter(|p| p.subtype == arg)
         {
-            f.turn_on(&prop.index);
+            f.turn_on(prop.index);
         }
     }
 }
@@ -118,19 +118,19 @@ pub fn create_obj_flag_mask_by_id(
     f: &mut Bitflag,
     props: &AllProperties,
     args: Box<dyn Iterator<Item = FlagId>>,
-) -> () {
+) {
     f.wipe();
     for arg in args {
         for prop in props.obj_properties[&PropertyType::Flag]
             .iter()
             .filter(|p| p.id_type == arg)
         {
-            f.turn_on(&prop.index);
+            f.turn_on(prop.index);
         }
     }
 }
 
-pub fn flag_message(all_props: &AllProperties, flag: &usize, name: &str) -> () {
+pub fn flag_message(all_props: &AllProperties, flag: &usize, name: &str) {
     let prop = all_props.lookup_obj_property(&PropertyType::Flag, flag);
     match prop {
         Some(p) => {
@@ -478,7 +478,7 @@ pub struct ObjectKindService {
 }
 
 impl ObjectKindService {
-    pub fn kind_set_all_aware(&mut self) -> () {
+    pub fn kind_set_all_aware(&mut self) {
         for kind in self.k_info.iter_mut() {
             if kind.name.len() != 0 {
                 kind.aware = match kind.flavor {
@@ -746,7 +746,7 @@ pub struct FlavorService {
 }
 
 impl FlavorService {
-    pub fn assign_fixed(self: &FlavorService, k_info: &mut Vec<ObjectKind>) -> () {
+    pub fn assign_fixed(self: &FlavorService, k_info: &mut Vec<ObjectKind>) {
         for flavor in &self.flavors {
             if flavor.sval != tvals::SVAL_UNKNOWN {
                 for kind in k_info.iter_mut() {
@@ -764,7 +764,7 @@ impl FlavorService {
         random: &mut Random,
         scroll_adj: &Vec<String>,
         tval: &tvals::TVals,
-    ) -> () {
+    ) {
         let mut appropriate_flavors =
             Vec::from_iter(self.flavors.iter().filter(|f| f.tval == *tval));
 
@@ -784,7 +784,7 @@ impl FlavorService {
         }
     }
 
-    pub fn reset_fixed(self: &mut FlavorService) -> () {
+    pub fn reset_fixed(self: &mut FlavorService) {
         for flavor in self.flavors.iter_mut() {
             if flavor.tval != tvals::TVals::Ring && flavor.text != "Plain Gold" {
                 flavor.sval = tvals::SVAL_UNKNOWN;
@@ -800,7 +800,7 @@ impl FlavorService {
         seed_flavor: &u64,
         turn: i32, // parser: Parser (when it gets implemented)
                    // randname: Randname (when it gets implemented)
-    ) -> () {
+    ) {
         let mut random = Random::seeded(*seed_flavor);
 
         if turn == 1 {

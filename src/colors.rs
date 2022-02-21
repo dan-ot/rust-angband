@@ -572,7 +572,7 @@ impl ColorService {
                     ),
                 ),
             ]),
-            gamma_helper: gamma_helper,
+            gamma_helper,
             gamma_table: [0; 256],
         }
     }
@@ -603,7 +603,7 @@ impl ColorService {
     }
 
     pub fn get_color(&self, a: &char, attr: &Attrs, n: i32) -> &Colors {
-        todo!() // No idea what these arguments actuall are - the source is unclear about char vs byte vs enum
+        todo!() // No idea what these arguments actually are - the source is unclear about char vs byte vs enum
 
         /***** source:
         if (a & (0x80))

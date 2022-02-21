@@ -29,11 +29,13 @@ pub struct GraphicsMode {
     pub menuname: String
 }
 
+#[derive(Clone, Debug)]
 pub enum FontType {
     Vector,
     Raster
 }
 
+#[derive(Clone, Debug)]
 pub struct FontInfo {
     pub name: String,
     pub path: PathBuf,
@@ -62,7 +64,7 @@ pub struct GraphicsModeJson {
 }
 
 impl GraphicsMode {
-    pub fn new<'a>(path: &PathBuf, index: usize, json: GraphicsModeJson) -> GraphicsMode {
+    pub fn new(path: &Path, index: usize, json: GraphicsModeJson) -> GraphicsMode {
         GraphicsMode {
             graf_id: index,
             alphablend: json.extra.alpha,
@@ -70,23 +72,24 @@ impl GraphicsMode {
             overdraw_max: json.extra.end,
             cell_width: json.size.width,
             cell_height: json.size.height,
-            path: path.clone(),
+            path: path.to_path_buf(),
             menuname: json.name.to_string()
         }
     }
 }
 
 // TODO: Tilesets and fonts need to resolve to the same thing - the renderer shouldn't care, it should be able to follow a map of attr/char pairs to a source coord and blend/shade setting
-pub struct GraphicsModeService<'a> {
+pub struct GraphicsModeService {
     pub graphics_modes: Vec<GraphicsMode>,
-    pub current_graphics_mode: Option<&'a GraphicsMode>,
+    pub current_graphics_mode: Option<usize>,
+    pub current_font: usize,
     pub fonts: Vec<FontInfo>
 }
 
-impl GraphicsModeService<'_> {
+impl GraphicsModeService {
     /// Read each subfolder under the given folder to see if there are Tile definitions there.
     /// If so, load them into the service
-    pub fn from_folders<'a>(tiles_folder: &Path, fonts_folder: &Path) -> GraphicsModeService<'a> {
+    pub fn from_folders(tiles_folder: &Path, fonts_folder: &Path) -> GraphicsModeService {
         let mut tiles_vec = vec!();
         for (idx, dir_read) in read_dir(tiles_folder).unwrap().enumerate() {
             let entry = dir_read.unwrap();
@@ -128,9 +131,12 @@ impl GraphicsModeService<'_> {
             }
         }
 
+        let found_font = fonts_vec.clone().into_iter().position(|f| f.name == "8x13x");
+
         GraphicsModeService {
             current_graphics_mode: None,
             graphics_modes: tiles_vec,
+            current_font: found_font.unwrap_or(0),
             fonts: fonts_vec
         }
     }
