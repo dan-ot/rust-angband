@@ -1,13 +1,15 @@
 use sdl2::event::Event;
 use sdl2::pixels::Color;
 use sdl2::rect::Rect;
-use sdl2::render::{Canvas, Texture};
-use sdl2::ttf::Font as SDLFont;
-use sdl2::video::Window as SDLWindow;
+use sdl2::render::{Canvas, Texture, WindowCanvas, TextureAccess, BlendMode, TextureCreator};
+use sdl2::ttf::{Font as SDLFont, Sdl2TtfContext, Hinting};
+use sdl2::video::{Window as SDLWindow, WindowContext};
 use std::collections::VecDeque;
+use std::convert::TryFrom;
 
 pub mod ui_event;
 pub mod graphics;
+pub mod cp437;
 
 // TODO: in the source, these are a linked list...
 pub struct TerminalWindow {
@@ -137,17 +139,17 @@ impl<U, D> Terminal<U, D> {
     fn dblh_hook(&mut self) {}
 }
 
-pub struct WindowConfig<'a> {
+pub struct WindowConfig {
     // TODO: Turn these flags into HashSets...
-    pub renderer_flags: i32,
-    pub renderer_index: i32,
-    pub window_flags: i32,
+    pub renderer_flags: u32,
+    pub renderer_index: usize,
+    pub window_flags: u32,
 
     // TODO: Do we actually need these paths? Do we load the file more than once,
     // or are these paths here because of order-of-operations on init?
-    pub wallpaper_path: &'a str,
-    pub font_name: &'a str,
-    pub font_size: i32,
+    pub wallpaper_path: String,
+    pub font_name: String,
+    pub font_size: u8,
 }
 
 pub struct SubwindowConfig<'a> {
@@ -211,22 +213,90 @@ pub struct Ttf<'a, 'b> {
 }
 
 /// I think this is the in-memory sprite sheet for a font, and a list of the rects for each character.
-/// If this is the case, it's probably a char->Rect map instead of a Vec
-pub struct FontCache<'a> {
+/// If this is the case, it's probably a char->Rect map instead of a Vec. As it stands, the index in this vec
+/// matches the index in the global list of 'useable characters'
+pub struct FontAtlas<'a> {
+    /// A blittable source for font glyphs. All pure-white, for use in blending as tiles or actual UI fontage.
     pub texture: Texture<'a>,
+    /// The set of Rects describing each blittable glyph.
     pub rects: Vec<Rect>,
 }
 
-pub struct Font<'a, 'b> {
-    pub ttf: Ttf<'a, 'b>,
-    pub name: &'a str,
-    pub path: &'a str,
+impl FontAtlas<'_> {
+    pub fn render_atlas<'a>(font: &graphics::FontInfo, font_context: &Sdl2TtfContext, canvas: &'a mut WindowCanvas, texture_creator: &'a TextureCreator<WindowContext>) -> FontAtlas<'a> {
+        let font_size = match font.font_type {
+            // For Raster fonts, size is an offset
+            graphics::FontType::Raster => 0,
+            // For Vector fonts, size is a measure. At some point, we'll make this more adjustable via configs or inputs
+            graphics::FontType::Vector => 12
+        };
+        let mut font_handle = font_context.load_font(&font.path, font_size).unwrap();
+        font_handle.set_hinting(Hinting::Light);
+        // Assumption: Font metrics won't have negative height or width despite returning as i32.
+        let height = u32::try_from(font_handle.height()).unwrap();
+        // Assumption: Capital 'W' is the widest glyph for a given font. This will allow us to create a monospace font by centering any narrower glyphs.
+        // 'advance' as a field provides a little extra room around the edges. This may not be exactly what we want, if we're trying to use a solid block for walls. Or maybe that works fine for those glyphs.
+        // However, I'm not sure this carries through to full CP437 (consider some of the box-drawing glpyhs)
+        let target_width = u32::try_from(font_handle.find_glyph_metrics('W').unwrap().advance).unwrap();
+        let mut texture = texture_creator.create_texture_target(None, target_width * u32::try_from(cp437::ASCII.len()).unwrap(), height).unwrap();
+        texture.set_blend_mode(BlendMode::Blend);
+        
+        let mut rects: Vec<Rect> = vec!();
+        canvas.with_texture_canvas(&mut texture, |mut_c| {
+            for (idx, glyph) in cp437::ASCII.char_indices() {
+                println!("Loading font {}", font.name);
+                let rendered_texture = font_handle.render(&glyph.to_string()).blended(Color::WHITE).unwrap().as_texture(&texture_creator).unwrap();
+                let metrics = font_handle.find_glyph_metrics(glyph).unwrap();
+                let glyph_width = u32::try_from(metrics.maxx - metrics.minx).unwrap();
+                let left_padding = metrics.minx;
+                let src = Rect::new(
+                    // Skip the normally-rendered space to the left of the glyph
+                    left_padding, 
+                    // Start at the top (bottom?)
+                    0,
+                    // don't include the space to the right of the glpyh
+                    glyph_width,
+                    // Take the whole height
+                    height
+                );
+                let dst = Rect::new(
+                    // We're monospacing, so offset by the index
+                    i32::try_from(idx).unwrap() * i32::try_from(target_width).unwrap()
+                    // Pad for half the width of the actual glyph
+                        + i32::try_from(glyph_width / 2).unwrap(),
+                    // Start at the top (bottom?)
+                    0, 
+                    // We need to center the glyph (not the advance) inside our monospace standard determined by 'W'
+                    // If we supply a width larger than the glyph, it will be stretched (and uncentered)
+                    glyph_width, 
+                    // Write the whole height.
+                    height
+                );
+                mut_c.copy(&rendered_texture, src, dst).unwrap();
+                rects.push(dst);
+                print!("{} @ [{}/{}]", glyph, dst.left(), dst.width())
+            }
+        }).unwrap();
 
-    pub size: i32,
+        FontAtlas::<'a> {
+            texture,
+            rects
+        }
+    }
+}
+
+pub struct Font<'a, 'b> {
+    // TODO: Why do we need these? The font is loaded.
+    pub name: String,
+    pub path: String,
+    pub ttf: Ttf<'a, 'b>,
+    
+    /// Point size for a vector font
+    pub size: u8,
     /// Index of font in global font array?
     pub index: isize,
-
-    pub cache: FontCache<'a>,
+    
+    pub cache: FontAtlas<'a>,
 }
 
 pub struct TermFlagValue<'a, 'b, U, D> {
@@ -377,7 +447,7 @@ pub struct Window<'a, 'b, U, D> {
     /// Our internal id, mostly for debugging
     pub index: u16,
 
-    pub config: WindowConfig<'a>,
+    pub config: WindowConfig,
 
     /// Has mouse focus
     pub focus: bool,
