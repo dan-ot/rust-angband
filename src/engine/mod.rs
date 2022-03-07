@@ -1,35 +1,33 @@
 use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
 use sdl2::pixels::Color;
-use sdl2::render::Canvas;
-use sdl2::video::Window;
+use sdl2::render::{WindowCanvas, CanvasBuilder};
 use sdl2::{EventPump, Sdl};
+use sdl2::ttf::Sdl2TtfContext;
 
-pub struct Engine {
-    pub canvas: Canvas<Window>,
+use crate::ui::FontAtlas;
+use crate::ui::graphics::GraphicsModeService;
+
+pub struct Engine<'a> {
+    pub canvas: Box<WindowCanvas>,
     pub events: EventPump,
+    pub atlas: Box<FontAtlas<'a>>,
+    pub graphics_modes: GraphicsModeService
 }
 
-impl Engine {
-    pub fn new(context: &Sdl) -> Engine {
-        let video_subsystem = context.video().unwrap();
-        let mode = video_subsystem.current_display_mode(0).unwrap();
-        let window = video_subsystem
-            .window(
-                "rust-angband",
-                (mode.w as f32 * 0.8) as u32,
-                (mode.h as f32 * 0.8) as u32,
-            )
-            .maximized()
-            .build()
-            .unwrap();
+impl Engine<'_> {
+    pub fn new(context: &Sdl, mut canvas: Box<WindowCanvas>, font_context: Sdl2TtfContext, graphics: GraphicsModeService) -> Engine {
+        let texture_creator = canvas.texture_creator();
 
-        let canvas = window.into_canvas().build().unwrap();
+        let atlas = Box::new(FontAtlas::render_atlas(&graphics.fonts[graphics.current_font], &font_context, &mut canvas, &texture_creator));
+
         let event_pump = context.event_pump().unwrap();
 
         Engine {
             canvas,
             events: event_pump,
+            atlas,
+            graphics_modes: graphics
         }
     }
 
