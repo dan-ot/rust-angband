@@ -8,6 +8,6 @@ impl ScrollNameService {
     pub fn init(
         &mut self,
         random: &mut Random, /* randname: Randname, when it gets implemented */
-    ) -> () {
+    ){
     }
 }
