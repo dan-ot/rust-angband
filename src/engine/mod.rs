@@ -3,10 +3,13 @@ use std::convert::TryInto;
 use std::ffi::CStr;
 use std::mem::size_of;
 use std::sync::mpsc::Receiver;
+use std::path::Path;
 
 // use crate::ui::FontAtlas;
 use crate::glad_gl::gl;
 use crate::ui::graphics::GraphicsModeService;
+
+pub mod shader;
 
 pub struct Engine {
     pub context: Glfw,
@@ -64,86 +67,117 @@ impl Engine {
     }
 
     pub fn run(&mut self) {
-        let mut shader_program: u32;
-        unsafe {
-            let vertex_file_bytes =
-                std::fs::read_to_string("resources/shaders/vertex_default.glsl").unwrap()
-                + "\0";
-            let vertex_shader_content =
-                CStr::from_bytes_with_nul(vertex_file_bytes.as_bytes()).unwrap();
-            let vertex_shader = gl::CreateShader(gl::VERTEX_SHADER);
-            gl::ShaderSource(
-                vertex_shader,
-                1,
-                &vertex_shader_content.as_ptr(),
-                std::ptr::null(),
-            );
-            gl::CompileShader(vertex_shader);
-            let mut vertex_success: i32 = 0;
-            gl::GetShaderiv(vertex_shader, gl::COMPILE_STATUS, &mut vertex_success);
-            if vertex_success == 0 {
-                panic!("Vertex Shader Compilation failed!");
-            }
+        let shader = shader::Shader::new(
+            Path::new("resources/shaders/vertex_default.glsl"), 
+            Path::new("resources/shaders/fragment_default.glsl")
+        ).unwrap();
+        // let mut shader_program: u32;
+        // unsafe {
+        //     let vertex_file_bytes =
+        //         std::fs::read_to_string("resources/shaders/vertex_default.glsl").unwrap()
+        //         + "\0";
+        //     let vertex_shader_content =
+        //         CStr::from_bytes_with_nul(vertex_file_bytes.as_bytes()).unwrap();
+        //     let vertex_shader = gl::CreateShader(gl::VERTEX_SHADER);
+        //     gl::ShaderSource(
+        //         vertex_shader,
+        //         1,
+        //         &vertex_shader_content.as_ptr(),
+        //         std::ptr::null(),
+        //     );
+        //     gl::CompileShader(vertex_shader);
+        //     let mut vertex_success: i32 = 0;
+        //     gl::GetShaderiv(vertex_shader, gl::COMPILE_STATUS, &mut vertex_success);
+        //     if vertex_success == 0 {
+        //         panic!("Vertex Shader Compilation failed!");
+        //     }
 
-            let fragment_file_bytes =
-                std::fs::read_to_string("resources/shaders/fragment_default.glsl").unwrap()
-                + "\0";
-            let fragment_shader_content =
-                CStr::from_bytes_with_nul(fragment_file_bytes.as_bytes()).unwrap();
-            let fragment_shader = gl::CreateShader(gl::FRAGMENT_SHADER);
-            gl::ShaderSource(
-                fragment_shader,
-                1,
-                &fragment_shader_content.as_ptr(),
-                std::ptr::null(),
-            );
-            gl::CompileShader(fragment_shader);
+        //     let fragment_file_bytes =
+        //         std::fs::read_to_string("resources/shaders/fragment_default.glsl").unwrap()
+        //         + "\0";
+        //     let fragment_shader_content =
+        //         CStr::from_bytes_with_nul(fragment_file_bytes.as_bytes()).unwrap();
+        //     let fragment_shader = gl::CreateShader(gl::FRAGMENT_SHADER);
+        //     gl::ShaderSource(
+        //         fragment_shader,
+        //         1,
+        //         &fragment_shader_content.as_ptr(),
+        //         std::ptr::null(),
+        //     );
+        //     gl::CompileShader(fragment_shader);
 
-            let mut fragment_success: i32 = 0;
-            gl::GetShaderiv(fragment_shader, gl::COMPILE_STATUS, &mut fragment_success);
+        //     let mut fragment_success: i32 = 0;
+        //     gl::GetShaderiv(fragment_shader, gl::COMPILE_STATUS, &mut fragment_success);
 
-            if fragment_success == 0 {
-                panic!("Fragment Shader Compilation failed!");
-            }
-            shader_program = gl::CreateProgram();
-            gl::AttachShader(shader_program, vertex_shader);
-            gl::AttachShader(shader_program, fragment_shader);
-            gl::LinkProgram(shader_program);
+        //     if fragment_success == 0 {
+        //         panic!("Fragment Shader Compilation failed!");
+        //     }
+        //     shader_program = gl::CreateProgram();
+        //     gl::AttachShader(shader_program, vertex_shader);
+        //     gl::AttachShader(shader_program, fragment_shader);
+        //     gl::LinkProgram(shader_program);
 
-            let mut program_success: i32 = 0;
-            gl::GetProgramiv(shader_program, gl::LINK_STATUS, &mut program_success);
-            if program_success == 0 {
-                panic!("Shader Program Linking failed!");
-            }
+        //     let mut program_success: i32 = 0;
+        //     gl::GetProgramiv(shader_program, gl::LINK_STATUS, &mut program_success);
+        //     if program_success == 0 {
+        //         panic!("Shader Program Linking failed!");
+        //     }
 
-            gl::DeleteShader(vertex_shader);
-            gl::DeleteShader(fragment_shader);
-        }
+        //     gl::DeleteShader(vertex_shader);
+        //     gl::DeleteShader(fragment_shader);
+        // }
 
         let mut vbo: u32 = 0;
         let mut vao: u32 = 0;
+        let mut ebo: u32 = 0;
         unsafe {
-            let vertices: [f32; 9] = [-0.5, -0.5, 0.0, 0.5, -0.5, 0.0, 0.0, 0.5, 0.0];
+            let vertices: [f32; 24] = [
+                // Positions     Colors
+                 0.5,  0.5, 0.0, 1.0, 0.0, 0.0, // Top Right
+                 0.5, -0.5, 0.0, 0.0, 1.0, 0.0, // Bottom Right
+                -0.5, -0.5, 0.0, 0.0, 0.0, 1.0, // Bottom Left
+                -0.5,  0.5, 0.0, 1.0, 0.0, 0.0,  // Top Left
+            ];
+            let indices: [u32; 6] = [
+                0, 1, 3, // First Triangle - TR->BR->TL, clockwise
+                1, 2, 3  // Second Triangle - BR->BL->TL, clockwise
+            ];
             gl::GenVertexArrays(1, &mut vao);
             gl::GenBuffers(1, &mut vbo);
+            gl::GenBuffers(1, &mut ebo);
             gl::BindVertexArray(vao);
             gl::BindBuffer(gl::ARRAY_BUFFER, vbo);
             gl::BufferData(
                 gl::ARRAY_BUFFER,
                 (vertices.len() * size_of::<f32>()).try_into().unwrap(),
                 &vertices as *const _ as *const std::ffi::c_void,
-                gl::STATIC_DRAW,
+                gl::STATIC_DRAW
             );
-
+            gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, ebo);
+            gl::BufferData(
+                gl::ELEMENT_ARRAY_BUFFER,
+                (indices.len() * size_of::<u32>()).try_into().unwrap(),
+                &indices as *const _ as *const std::ffi::c_void,
+                gl::STATIC_DRAW
+            );
+            
             gl::VertexAttribPointer(
                 0,
                 3,
                 gl::FLOAT,
                 gl::FALSE,
-                (3 * size_of::<f32>()).try_into().unwrap(),
+                (6 * size_of::<f32>()).try_into().unwrap(),
                 0 as *const std::ffi::c_void,
             );
             gl::EnableVertexAttribArray(0);
+            gl::VertexAttribPointer(
+                1,
+                3,
+                gl::FLOAT,
+                gl::FALSE,
+                (6 * size_of::<f32>()).try_into().unwrap(),
+                (3 * size_of::<f32>()) as *const std::ffi::c_void
+            );
 
             gl::BindBuffer(gl::ARRAY_BUFFER, 0);
         };
@@ -159,12 +193,18 @@ impl Engine {
                 }
             }
 
+            // let time_value = self.context.get_time();
+            // let green_value = ((time_value.sin() / 2.0) + 0.5) as f32;
+            
             unsafe {
+                // let vertex_color_location = gl::GetUniformLocation(shader_program, CStr::from_bytes_with_nul("ourColor\0".as_bytes()).unwrap().as_ptr());
                 gl::ClearColor(0.2, 0.3, 0.3, 1.0);
                 gl::Clear(gl::COLOR_BUFFER_BIT);
-                gl::UseProgram(shader_program);
+                shader.activate();
+                // gl::Uniform4f(vertex_color_location, 0.0, green_value, 0.0, 1.0);
                 gl::BindVertexArray(vao);
-                gl::DrawArrays(gl::TRIANGLES, 0, 3);
+                gl::DrawElements(gl::TRIANGLES, 6, gl::UNSIGNED_INT, 0 as *const std::ffi::c_void);
+                gl::BindVertexArray(0);
             }
 
             self.window.swap_buffers();
@@ -173,7 +213,7 @@ impl Engine {
         unsafe {
             gl::DeleteVertexArrays(1, &vao);
             gl::DeleteBuffers(1, &vbo);
-            gl::DeleteProgram(shader_program);
+            gl::DeleteBuffers(1, &ebo);
         }
         // 'running: loop {
         //     self.canvas.set_draw_color(Color::BLACK);
