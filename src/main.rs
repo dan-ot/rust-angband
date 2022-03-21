@@ -1,4 +1,5 @@
 #![warn(clippy::all)]
+#![windows_subsystem="windows"]
 extern crate glfw;
 
 use std::path::Path;
