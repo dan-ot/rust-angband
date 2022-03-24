@@ -75,61 +75,6 @@ impl Engine {
             Path::new("resources/shaders/fragment_default.glsl"),
         )
         .unwrap();
-        // let mut shader_program: u32;
-        // unsafe {
-        //     let vertex_file_bytes =
-        //         std::fs::read_to_string("resources/shaders/vertex_default.glsl").unwrap()
-        //         + "\0";
-        //     let vertex_shader_content =
-        //         CStr::from_bytes_with_nul(vertex_file_bytes.as_bytes()).unwrap();
-        //     let vertex_shader = gl::CreateShader(gl::VERTEX_SHADER);
-        //     gl::ShaderSource(
-        //         vertex_shader,
-        //         1,
-        //         &vertex_shader_content.as_ptr(),
-        //         std::ptr::null(),
-        //     );
-        //     gl::CompileShader(vertex_shader);
-        //     let mut vertex_success: i32 = 0;
-        //     gl::GetShaderiv(vertex_shader, gl::COMPILE_STATUS, &mut vertex_success);
-        //     if vertex_success == 0 {
-        //         panic!("Vertex Shader Compilation failed!");
-        //     }
-
-        //     let fragment_file_bytes =
-        //         std::fs::read_to_string("resources/shaders/fragment_default.glsl").unwrap()
-        //         + "\0";
-        //     let fragment_shader_content =
-        //         CStr::from_bytes_with_nul(fragment_file_bytes.as_bytes()).unwrap();
-        //     let fragment_shader = gl::CreateShader(gl::FRAGMENT_SHADER);
-        //     gl::ShaderSource(
-        //         fragment_shader,
-        //         1,
-        //         &fragment_shader_content.as_ptr(),
-        //         std::ptr::null(),
-        //     );
-        //     gl::CompileShader(fragment_shader);
-
-        //     let mut fragment_success: i32 = 0;
-        //     gl::GetShaderiv(fragment_shader, gl::COMPILE_STATUS, &mut fragment_success);
-
-        //     if fragment_success == 0 {
-        //         panic!("Fragment Shader Compilation failed!");
-        //     }
-        //     shader_program = gl::CreateProgram();
-        //     gl::AttachShader(shader_program, vertex_shader);
-        //     gl::AttachShader(shader_program, fragment_shader);
-        //     gl::LinkProgram(shader_program);
-
-        //     let mut program_success: i32 = 0;
-        //     gl::GetProgramiv(shader_program, gl::LINK_STATUS, &mut program_success);
-        //     if program_success == 0 {
-        //         panic!("Shader Program Linking failed!");
-        //     }
-
-        //     gl::DeleteShader(vertex_shader);
-        //     gl::DeleteShader(fragment_shader);
-        // }
 
         let vertex_data = [
             (( 0.5,  0.5, 0.0), (1.0, 1.0, 1.0), (1.0, 1.0)),
@@ -141,10 +86,10 @@ impl Engine {
             0, 1, 3,
             1, 2, 3
         ];
-        let mesh = vertices::MeshKit::new(&vertex_data, &indices);
-        let mut vao: u32 = 0;
-        let mut ebo: u32 = 0;
-        let mut vbo: u32 = 0;
+        // let mesh = vertices::MeshKit::new(&vertex_data, &indices);
+        let mut vertex_array: u32 = 0;
+        let mut element_buffer: u32 = 0;
+        let mut vertex_buffer: u32 = 0;
         let size: i32 = indices.len().try_into().unwrap();
 
         let mut as_vec = Vec::<f32>::new();
@@ -158,21 +103,22 @@ impl Engine {
             as_vec.extend([tx, ty]);
         }
 
+        let sf32 = size_of::<f32>();
         unsafe {
-            gl::GenVertexArrays(1, &mut vao);
-            gl::BindVertexArray(vao);
+            gl::GenVertexArrays(1, &mut vertex_array);
+            gl::BindVertexArray(vertex_array);
             
-            gl::GenBuffers(1, &mut vbo);
-            gl::BindBuffer(gl::ARRAY_BUFFER, vbo);
+            gl::GenBuffers(1, &mut vertex_buffer);
+            gl::GenBuffers(1, &mut element_buffer);
+            gl::BindBuffer(gl::ARRAY_BUFFER, vertex_buffer);
             gl::BufferData(
                 gl::ARRAY_BUFFER,
-                (as_vec.len() * size_of::<f32>()).try_into().unwrap(),
-                &as_vec as *const _ as *const c_void,
+                (as_vec.len() * sf32).try_into().unwrap(),
+                as_vec.as_ptr() as *const c_void,
                 gl::STATIC_DRAW
             );
             
-            gl::GenBuffers(1, &mut ebo);
-            gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, ebo);
+            gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, element_buffer);
             gl::BufferData(
                 gl::ELEMENT_ARRAY_BUFFER,
                 (indices.len() * size_of::<u32>()).try_into().unwrap(),
@@ -180,7 +126,6 @@ impl Engine {
                 gl::STATIC_DRAW
             );
 
-            let sf32 = size_of::<f32>();
             let info_per_vertex = 3 // for the vertex
                 + 3 // for the color
                 + 2; // for the texel
@@ -205,6 +150,7 @@ impl Engine {
                 gl::FLOAT,
                 gl::FALSE,
                 row_size,
+                // Offset by the size of the previous structure
                 (3 * sf32) as *const c_void
             );
             gl::EnableVertexAttribArray(1);
@@ -216,6 +162,7 @@ impl Engine {
                 gl::FLOAT,
                 gl::FALSE,
                 row_size,
+                // Offset by the sizes of both previous structures
                 ((3 + 3) * sf32) as *const c_void
             );
             gl::EnableVertexAttribArray(2);
@@ -296,9 +243,9 @@ impl Engine {
                 gl::ClearColor(0.2, 0.3, 0.3, 1.0);
                 gl::Clear(gl::COLOR_BUFFER_BIT);
                 shader.activate();
-                mesh.render();
+                // mesh.render();
 
-                gl::BindVertexArray(vao);
+                gl::BindVertexArray(vertex_array);
                 // In this case, we mean '0 cast to Any', not 'pointer to memory 0'
                 #[allow(clippy::zero_ptr)]
                 gl::DrawElements(
@@ -323,9 +270,9 @@ impl Engine {
         }
 
         unsafe {
-            gl::DeleteVertexArrays(1, &vao);
-            gl::DeleteBuffers(1, &vbo);
-            gl::DeleteBuffers(1, &ebo);
+            gl::DeleteVertexArrays(1, &vertex_array);
+            gl::DeleteBuffers(1, &vertex_buffer);
+            gl::DeleteBuffers(1, &element_buffer);
         }
         // 'running: loop {
         //     self.canvas.set_draw_color(Color::BLACK);
