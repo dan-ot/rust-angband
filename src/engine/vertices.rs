@@ -8,19 +8,22 @@ pub struct MeshKit {
     pub vertex_control_handle: u32,
     pub vertex_data_handle: u32,
     pub element_handle: u32,
-    pub size: i32
+    pub size: i32,
+    raw_data: Vec<f32>,
+    indices: Vec<u32>
 }
 
 impl MeshKit {
     /// Take the vertices, and zip them with each member of data, to make
     /// data-per-vertex. Will probably need to extend data storage for
     /// shaders that have inputs other than vec3
-    pub fn new(vertices_with_data: &[((f32, f32, f32), (f32, f32, f32), (f32, f32))], indices: &[u32]) -> MeshKit {
+    pub fn new(vertices_with_data: &[((f32, f32, f32), (f32, f32, f32), (f32, f32))], raw_indices: &[u32]) -> MeshKit {
         let mut vao: u32 = 0;
         let mut ebo: u32 = 0;
         let mut vbo: u32 = 0;
 
         let mut as_vec = Vec::<f32>::new();
+        let indices = Vec::from(raw_indices);
         
         for (vert, color, tex) in vertices_with_data.iter() {
             let (x, y, z) = vert;
@@ -31,6 +34,8 @@ impl MeshKit {
             as_vec.extend([tx, ty]);
         }
 
+        let sf32 = size_of::<f32>();
+
         unsafe {
             gl::GenVertexArrays(1, &mut vao);
             gl::BindVertexArray(vao);
@@ -39,8 +44,8 @@ impl MeshKit {
             gl::BindBuffer(gl::ARRAY_BUFFER, vbo);
             gl::BufferData(
                 gl::ARRAY_BUFFER,
-                (as_vec.len() * size_of::<f32>()).try_into().unwrap(),
-                &as_vec as *const _ as *const c_void,
+                (as_vec.len() * sf32).try_into().unwrap(),
+                as_vec.as_ptr() as *const c_void,
                 gl::STATIC_DRAW
             );
             
@@ -49,11 +54,10 @@ impl MeshKit {
             gl::BufferData(
                 gl::ELEMENT_ARRAY_BUFFER,
                 (indices.len() * size_of::<u32>()).try_into().unwrap(),
-                &indices as *const _ as *const c_void,
+                indices.as_ptr() as *const c_void,
                 gl::STATIC_DRAW
             );
 
-            let sf32 = size_of::<f32>();
             let info_per_vertex = 3 // for the vertex
                 + 3 // for the color
                 + 2; // for the texel
@@ -89,7 +93,7 @@ impl MeshKit {
                 gl::FLOAT,
                 gl::FALSE,
                 row_size,
-                ((3 + 2) * sf32) as *const c_void
+                ((3 + 3) * sf32) as *const c_void
             );
             gl::EnableVertexAttribArray(2);
 
@@ -101,7 +105,9 @@ impl MeshKit {
             vertex_control_handle: vao,
             vertex_data_handle: vbo,
             element_handle: ebo,
-            size: indices.len().try_into().unwrap()
+            size: indices.len().try_into().unwrap(),
+            raw_data: as_vec,
+            indices
         }
     }
 
