@@ -85,12 +85,6 @@ impl Shader {
             }
         }
     }
-
-    pub fn activate(&self) {
-        unsafe {
-            gl::UseProgram(self.id);
-        }
-    }
 }
 
 impl Drop for Shader {

@@ -110,21 +110,6 @@ impl MeshKit {
             indices
         }
     }
-
-    pub fn render(&self) {
-        unsafe {
-            gl::BindVertexArray(self.vertex_control_handle);
-            // In this case, we mean '0 cast to Any', not 'pointer to memory 0'
-            #[allow(clippy::zero_ptr)]
-            gl::DrawElements(
-                gl::TRIANGLES,
-                self.size,
-                gl::UNSIGNED_INT,
-                0 as *const c_void
-            );
-            gl::BindVertexArray(0);
-        }
-    }
 }
 
 impl Drop for MeshKit {
