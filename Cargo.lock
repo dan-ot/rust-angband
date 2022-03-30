@@ -600,6 +600,7 @@ name = "rust-angband"
 version = "0.1.0"
 dependencies = [
  "glfw",
+ "image",
  "rand",
  "serde",
  "serde_json",

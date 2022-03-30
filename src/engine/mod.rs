@@ -1,6 +1,5 @@
 use glfw::{Action, Context, Glfw, Key, Window, WindowEvent, WindowHint, WindowMode};
 use std::convert::TryInto;
-use std::mem::size_of;
 use std::ffi::c_void;
 use std::path::Path;
 use std::sync::mpsc::Receiver;
@@ -12,6 +11,7 @@ use crate::ui::graphics::GraphicsModeService;
 pub mod shader;
 pub mod vertices;
 pub mod glwrap;
+pub mod texture;
 
 pub struct Engine {
     pub gl: glwrap::Gl,
@@ -57,8 +57,6 @@ impl Engine {
         window.set_framebuffer_size_polling(true);
         context.set_swap_interval(glfw::SwapInterval::Sync(1));
 
-        
-        // gl::load(|e| context.get_proc_address_raw(e) as *const std::os::raw::c_void);
         // let atlas = Box::new(FontAtlas::render_atlas(&graphics.fonts[graphics.current_font], &font_context, &mut canvas, &texture_creator));
 
         Engine {
@@ -78,15 +76,19 @@ impl Engine {
 
         let vertex_data = [
             (( 0.5,  0.5, 0.0), (1.0, 1.0, 1.0), (1.0, 1.0)),
-            (( 0.5, -0.5, 0.0), (1.0, 0.0, 1.0), (1.0, 0.0)),
-            ((-0.5, -0.5, 0.0), (1.0, 1.0, 0.0), (0.0, 0.0)),
-            ((-0.5,  0.5, 0.0), (1.0, 1.0, 0.0), (0.0, 1.0))
+            (( 0.5, -0.5, 0.0), (1.0, 1.0, 1.0), (1.0, 0.0)),
+            ((-0.5, -0.5, 0.0), (1.0, 1.0, 1.0), (0.0, 0.0)),
+            ((-0.5,  0.5, 0.0), (1.0, 1.0, 1.0), (0.0, 1.0))
         ];
         let indices = [
             0, 1, 3,
             1, 2, 3
         ];
         let mesh = vertices::MeshKit::new(&vertex_data, &indices);
+
+        let texture = texture::Texture::new(
+            Path::new("resources/images/container.jpg")
+        );
 
         while !self.window.should_close() {
             self.gl.context.poll_events();
@@ -103,6 +105,7 @@ impl Engine {
 
             self.gl.clear_color(0.2, 0.3, 0.3, 1.0);
             self.gl.activate_shader(&shader);
+            self.gl.activate_texture(&texture);
             self.gl.render_mesh(&mesh);
 
             self.window.swap_buffers();

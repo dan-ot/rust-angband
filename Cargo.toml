@@ -9,6 +9,7 @@ edition = "2018"
 rand = {version = "0.8.4", features = ["std_rng"]}
 serde = {version = "1.0.132", features = ["derive"]}
 serde_json = "1.0.73"
+image = "0.24.1"
 
 [dependencies.glfw]
 git = "https://github.com/bjz/glfw-rs.git"

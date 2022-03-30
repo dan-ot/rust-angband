@@ -1,3 +1,4 @@
+use crate::engine::texture::Texture;
 use crate::engine::shader::Shader;
 use glfw::Glfw;
 use std::os::raw::c_void as os_void;
@@ -43,6 +44,13 @@ impl Gl {
     pub fn activate_shader(&self, shader: &Shader) {
         unsafe {
             gl::UseProgram(shader.id);
+        }
+    }
+
+    pub fn activate_texture(&self, texture: &Texture) {
+        unsafe {
+            // gl::ActiveTexture(gl::TEXTURE0);
+            gl::BindTexture(gl::TEXTURE_2D, texture.handle);
         }
     }
 }
