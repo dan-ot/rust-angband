@@ -1,6 +1,7 @@
 use std::mem::size_of;
 use std::ffi::c_void;
 use std::convert::TryInto;
+use nalgebra_glm::{Vec3, Vec2};
 
 use crate::glad_gl::gl;
 
@@ -17,7 +18,7 @@ impl MeshKit {
     /// Take the vertices, and zip them with each member of data, to make
     /// data-per-vertex. Will probably need to extend data storage for
     /// shaders that have inputs other than vec3
-    pub fn new(vertices_with_data: &[((f32, f32, f32), (f32, f32, f32), (f32, f32))], raw_indices: &[u32]) -> MeshKit {
+    pub fn new(vertices_with_data: &[(Vec3, Vec3, Vec2)], raw_indices: &[u32]) -> MeshKit {
         let mut vao: u32 = 0;
         let mut ebo: u32 = 0;
         let mut vbo: u32 = 0;
@@ -26,12 +27,9 @@ impl MeshKit {
         let indices = Vec::from(raw_indices);
         
         for (vert, color, tex) in vertices_with_data.iter() {
-            let (x, y, z) = vert;
-            as_vec.extend([x, y, z]);
-            let (r, g, b) = color;
-            as_vec.extend([r, g, b]);
-            let (tx, ty) = tex;
-            as_vec.extend([tx, ty]);
+            as_vec.extend([vert.x, vert.y, vert.z]);
+            as_vec.extend([color.x, color.y, color.z]);
+            as_vec.extend([tex.x, tex.y]);
         }
 
         let sf32 = size_of::<f32>();
