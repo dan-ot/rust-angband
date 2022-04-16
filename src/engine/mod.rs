@@ -1,3 +1,4 @@
+use rusttype::Font;
 use std::ffi::CString;
 use glfw::{Action, Context, Glfw, Key, Modifiers, Window, WindowEvent, WindowHint, WindowMode};
 use std::convert::TryInto;
@@ -10,6 +11,8 @@ use nalgebra_glm as glm;
 // use crate::ui::FontAtlas;
 use crate::glad_gl::gl;
 use crate::ui::graphics::GraphicsModeService;
+use crate::ui::cp437::Cp437;
+use crate::random::Random;
 
 pub mod shader;
 pub mod vertices;
@@ -20,16 +23,18 @@ pub mod camera;
 pub struct Engine {
     pub gl: glwrap::Gl,
     pub graphics_modes: GraphicsModeService,
+    pub font: Cp437
 }
 
 impl Engine {
-    pub fn new(mut context: Glfw, graphics: GraphicsModeService) -> Engine {
-
-        // let atlas = Box::new(FontAtlas::render_atlas(&graphics.fonts[graphics.current_font], &font_context, &mut canvas, &texture_creator));
+    pub fn new(graphics: GraphicsModeService) -> Engine {
+        let content = std::fs::read(Path::new("resources/fonts/FiraCode-Medium.ttf")).unwrap();
+        let face = Font::try_from_vec(content).unwrap();
 
         Engine {
             gl: glwrap::Gl::new(),
             graphics_modes: graphics,
+            font: Cp437::from_face(&face, 255.0)
         }
     }
 
@@ -98,7 +103,7 @@ impl Engine {
         ];
         let cube_mesh = vertices::MeshKit::new(&cube_vertex_data, &cube_indices);
 
-        let texture = texture::Texture::new(
+        let texture = texture::Texture::from_file(
             Path::new("resources/images/container.jpg")
         );
 
@@ -111,6 +116,11 @@ impl Engine {
 
         let projection = glm::perspective(w / h, glm::radians(&glm::vec1(45.0)).x, 0.1, 100.0);
 
+        let mut rng = Random::new();
+        let cp_437 = Cp437::set();
+        let len: i32 = cp_437.len().try_into().unwrap();
+        let mut which: usize = rng.randint0(len).try_into().unwrap();
+        println!("Showing {} ({})", which, cp_437.get(which).unwrap());
         while !self.gl.should_close() {
             let elapsed = self.gl.tick();
             let events = self.gl.events();
@@ -146,6 +156,10 @@ impl Engine {
                     WindowEvent::Key(Key::A, _, Action::Release, _) => {
                         camera.strafe(1.0);
                     },
+                    WindowEvent::Key(Key::Space, _, Action::Release, _) => {
+                        which = rng.randint0(len).try_into().unwrap();
+                        println!("Showing {} ({})", which, cp_437.get(which).unwrap());
+                    }
                     _ => (),
                 }
             }
@@ -161,7 +175,8 @@ impl Engine {
             self.gl.specify_matrix_parameter(&shader, "view", &camera.view());
             self.gl.specify_matrix_parameter(&shader, "projection", &projection);
 
-            self.gl.activate_texture(&texture);
+            // self.gl.activate_texture(&texture);
+            self.gl.activate_texture(self.font.code(which));
             self.gl.render_mesh(&floor_mesh);
 
             self.gl.swap();

@@ -11,6 +11,8 @@ serde = {version = "1.0.132", features = ["derive"]}
 serde_json = "1.0.73"
 image = "0.24.1"
 nalgebra-glm = "0.16.0"
+freetype-rs = "0.29.1"
+rusttype = "0.9.2"
 
 [dependencies.glfw]
 git = "https://github.com/bjz/glfw-rs.git"
