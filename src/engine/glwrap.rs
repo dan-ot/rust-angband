@@ -89,32 +89,10 @@ impl Gl {
         }
     }
 
-    pub fn activate_shader(&self, shader: &Shader) {
-        unsafe {
-            gl::UseProgram(shader.id);
-        }
-    }
-
     pub fn activate_texture(&self, texture: &Texture) {
         unsafe {
             // gl::ActiveTexture(gl::TEXTURE0);
             gl::BindTexture(gl::TEXTURE_2D, texture.handle);
-        }
-    }
-
-    pub fn specify_matrix_parameter(&self, shader: &Shader, name: &str, matrix: &TMat4<f32>) {
-        unsafe {
-            let n = CString::new(name).unwrap();
-            let loc = gl::GetUniformLocation(shader.id, n.as_ptr());
-            gl::UniformMatrix4fv(loc, 1, gl::FALSE, nalgebra_glm::value_ptr(matrix).as_ptr());
-        }
-    }
-
-    pub fn specify_vector_parameter(&self, shader: &Shader, name: &str, vector: &TVec3<f32>) {
-        unsafe {
-            let n = CString::new(name).unwrap();
-            let loc = gl::GetUniformLocation(shader.id, n.as_ptr());
-            gl::Uniform3f(loc, vector.x, vector.y, vector.z);
         }
     }
 

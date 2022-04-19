@@ -39,7 +39,7 @@ impl Engine {
     }
 
     pub fn run(&mut self) {
-        let shader = shader::Shader::new(
+        let mut shader = shader::Shader::new(
             Path::new("resources/shaders/vertex_default.glsl"),
             Path::new("resources/shaders/fragment_default.glsl"),
         )
@@ -165,9 +165,16 @@ impl Engine {
                     },
                     WindowEvent::Key(Key::Space, _, Action::Release, _) => {
                         let font = &self.font;
-                        grid = (0..grid_height).map(|_| {
-                            (0..grid_width).map(|_| {(font.random(&mut rng), colors.angband_color_table[&colors.random(&mut rng)], colors.angband_color_table[&colors.random(&mut rng)])}).collect()
-                        }).collect();
+                        for row in grid.iter_mut() {
+                            for entry in row.iter_mut() {
+                                entry.0 = font.random(&mut rng);
+                                entry.1 = colors.angband_color_table[&colors.random(&mut rng)];
+                                entry.2 = colors.angband_color_table[&colors.random(&mut rng)];
+                            }
+                        }
+                        // grid = (0..grid_height).map(|_| {
+                        //     (0..grid_width).map(|_| {(font.random(&mut rng), colors.angband_color_table[&colors.random(&mut rng)], colors.angband_color_table[&colors.random(&mut rng)])}).collect()
+                        // }).collect();
                     }
                     _ => (),
                 }
@@ -178,7 +185,7 @@ impl Engine {
             }
 
             self.gl.clear_color(0.2, 0.3, 0.3, 1.0);
-            self.gl.activate_shader(&shader);
+            shader.activate();
 
             let mut drawn = 0;
             for (y, r) in grid.iter().enumerate() {
@@ -187,12 +194,12 @@ impl Engine {
                         && (x as f32) < camera.position.x + 45.0 && (x as f32) > camera.position.x - 45.0 {
                             let model = glm::translate(&identity, &glm::vec3(x as f32, 0.0, y as f32));
             
-                            self.gl.specify_matrix_parameter(&shader, "model", &model);
-                            self.gl.specify_matrix_parameter(&shader, "view", &camera.view);
-                            self.gl.specify_matrix_parameter(&shader, "projection", &projection);
+                            shader.matrix_parameter("model", &model);
+                            shader.matrix_parameter("view", &camera.view);
+                            shader.matrix_parameter("projection", &projection);
         
-                            self.gl.specify_vector_parameter(&shader, "fgColor", fg);
-                            self.gl.specify_vector_parameter(&shader, "bgColor", bg);
+                            shader.vector_parameter("fgColor", fg);
+                            shader.vector_parameter("bgColor", bg);
             
                             self.gl.activate_texture(self.font.char(*ch));
                             self.gl.render_mesh(&floor_mesh);

@@ -1,10 +1,13 @@
+use std::collections::HashMap;
 use std::ffi::{CString};
 use std::path::Path;
+use nalgebra_glm::{TMat4, TVec3};
 
 use crate::glad_gl::gl;
 
 pub struct Shader {
-    pub id: u32
+    id: u32,
+    parameters: HashMap<String, i32>
 }
 
 pub enum ShaderContent<'a> {
@@ -80,9 +83,52 @@ impl Shader {
                 Err (format!("Program Link Failure: {}", log.into_string().unwrap()))
             } else {
                 Ok (Shader {
-                    id: program_handle
+                    id: program_handle,
+                    parameters: HashMap::new()
                 })
             }
+        }
+    }
+
+    pub fn matrix_parameter(&mut self, name: &str, matrix: &TMat4<f32>) {
+        match self.parameters.get(name) {
+            Some (known) => {
+                unsafe {
+                    gl::UniformMatrix4fv(*known, 1, gl::FALSE, nalgebra_glm::value_ptr(matrix).as_ptr());
+                }
+            },
+            None => {
+                unsafe {
+                    let n = CString::new(name).unwrap();
+                    let loc = gl::GetUniformLocation(self.id, n.as_ptr());
+                    self.parameters.insert(String::from(name), loc);
+                    gl::UniformMatrix4fv(loc, 1, gl::FALSE, nalgebra_glm::value_ptr(matrix).as_ptr());
+                }
+            }
+        }
+    }
+
+    pub fn vector_parameter(&mut self, name: &str, vector: &TVec3<f32>) {
+        match self.parameters.get(name) {
+            Some (known) => {
+                unsafe {
+                    gl::Uniform3f(*known, vector.x, vector.y, vector.z);
+                }
+            },
+            None => {
+                unsafe {
+                    let n = CString::new(name).unwrap();
+                    let loc = gl::GetUniformLocation(self.id, n.as_ptr());
+                    self.parameters.insert(String::from(name), loc);
+                    gl::Uniform3f(loc, vector.x, vector.y, vector.z);
+                }
+            }
+        }
+    }
+
+    pub fn activate(&self) {
+        unsafe {
+            gl::UseProgram(self.id);
         }
     }
 }
