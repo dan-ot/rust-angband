@@ -1,5 +1,7 @@
+use crate::random::Random;
 use std::collections::HashMap;
 use std::iter::FromIterator;
+use nalgebra_glm::{vec3, TVec3};
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq, Hash)]
 pub enum Colors {
@@ -90,7 +92,7 @@ impl ColorType {
 }
 
 pub struct ColorService {
-    pub angband_color_table: HashMap<Colors, [u8; 4]>,
+    pub angband_color_table: HashMap<Colors, TVec3<f32>>,
     pub color_table: HashMap<char, ColorType>,
     pub gamma_table: [u8; 256],
     pub gamma_helper: [i64; 256],
@@ -120,35 +122,35 @@ impl ColorService {
         ];
         ColorService {
             angband_color_table: HashMap::from_iter([
-                (Colors::Dark, [0x00, 0x00, 0x00, 0x00]),
-                (Colors::White, [0x00, 0xff, 0xff, 0xff]),
-                (Colors::Slate, [0x00, 0x80, 0x80, 0x80]),
-                (Colors::Orange, [0x00, 0xff, 0x80, 0x00]),
-                (Colors::Red, [0x00, 0xc0, 0x00, 0x00]),
-                (Colors::Green, [0x00, 0x00, 0x80, 0x40]),
-                (Colors::Blue, [0x00, 0x00, 0x40, 0xff]),
-                (Colors::Umber, [0x00, 0x80, 0x40, 0x00]),
-                (Colors::LDark, [0x00, 0x60, 0x60, 0x60]),
-                (Colors::LWhite, [0x00, 0xc0, 0xc0, 0xc0]),
-                (Colors::LPurple, [0x00, 0xff, 0x00, 0xff]),
-                (Colors::Yellow, [0x00, 0xff, 0xff, 0x00]),
-                (Colors::LRed, [0x00, 0xff, 0x40, 0x40]),
-                (Colors::LGreen, [0x00, 0x00, 0xff, 0x00]),
-                (Colors::LBlue, [0x00, 0x00, 0xff, 0xff]),
-                (Colors::LUmber, [0x00, 0xc0, 0x80, 0x40]),
-                (Colors::Purple, [0x00, 0x90, 0x00, 0x90]),
-                (Colors::Violet, [0x00, 0x90, 0x20, 0xff]),
-                (Colors::Teal, [0x00, 0x00, 0xa0, 0xa0]),
-                (Colors::Mud, [0x00, 0x6c, 0x6c, 0x30]),
-                (Colors::LYellow, [0x00, 0xff, 0xff, 0x90]),
-                (Colors::Magenta, [0x00, 0xff, 0x00, 0xa0]),
-                (Colors::LTeal, [0x00, 0x20, 0xff, 0xdc]),
-                (Colors::LViolet, [0x00, 0xb8, 0xa8, 0xff]),
-                (Colors::LPink, [0x00, 0xff, 0x80, 0x80]),
-                (Colors::Mustard, [0x00, 0xb4, 0xb4, 0x00]),
-                (Colors::BlueSlate, [0x00, 0xa0, 0xc0, 0xd0]),
-                (Colors::DeepLBlue, [0x00, 0x00, 0xb0, 0xff]),
-                (Colors::Shade, [0x00, 0x28, 0x28, 0x28]),
+                (Colors::Dark, vec3((0x00 as f32) / 256.0, (0x00 as f32) / 256.0, (0x00 as f32) / 256.0)),
+                (Colors::White, vec3((0xff as f32) / 256.0, (0xff as f32) / 256.0, (0xff as f32) / 256.0)),
+                (Colors::Slate, vec3((0x80 as f32) / 256.0, (0x80 as f32) / 256.0, (0x80 as f32) / 256.0)),
+                (Colors::Orange, vec3((0xff as f32) / 256.0, (0x80 as f32) / 256.0, (0x00 as f32) / 256.0)),
+                (Colors::Red, vec3((0xc0 as f32) / 256.0, (0x00 as f32) / 256.0, (0x00 as f32) / 256.0)),
+                (Colors::Green, vec3((0x00 as f32) / 256.0, (0x80 as f32) / 256.0, (0x40 as f32) / 256.0)),
+                (Colors::Blue, vec3((0x00 as f32) / 256.0, (0x40 as f32) / 256.0, (0xff as f32) / 256.0)),
+                (Colors::Umber, vec3((0x80 as f32) / 256.0, (0x40 as f32) / 256.0, (0x00 as f32) / 256.0)),
+                (Colors::LDark, vec3((0x60 as f32) / 256.0, (0x60 as f32) / 256.0, (0x60 as f32) / 256.0)),
+                (Colors::LWhite, vec3((0xc0 as f32) / 256.0, (0xc0 as f32) / 256.0, (0xc0 as f32) / 256.0)),
+                (Colors::LPurple, vec3((0xff as f32) / 256.0, (0x00 as f32) / 256.0, (0xff as f32) / 256.0)),
+                (Colors::Yellow, vec3((0xff as f32) / 256.0, (0xff as f32) / 256.0, (0x00 as f32) / 256.0)),
+                (Colors::LRed, vec3((0xff as f32) / 256.0, (0x40 as f32) / 256.0, (0x40 as f32) / 256.0)),
+                (Colors::LGreen, vec3((0x00 as f32) / 256.0, (0xff as f32) / 256.0, (0x00 as f32) / 256.0)),
+                (Colors::LBlue, vec3((0x00 as f32) / 256.0, (0xff as f32) / 256.0, (0xff as f32) / 256.0)),
+                (Colors::LUmber, vec3((0xc0 as f32) / 256.0, (0x80 as f32) / 256.0, (0x40 as f32) / 256.0)),
+                (Colors::Purple, vec3((0x90 as f32) / 256.0, (0x00 as f32) / 256.0, (0x90 as f32) / 256.0)),
+                (Colors::Violet, vec3((0x90 as f32) / 256.0, (0x20 as f32) / 256.0, (0xff as f32) / 256.0)),
+                (Colors::Teal, vec3((0x00 as f32) / 256.0, (0xa0 as f32) / 256.0, (0xa0 as f32) / 256.0)),
+                (Colors::Mud, vec3((0x6c as f32) / 256.0, (0x6c as f32) / 256.0, (0x30 as f32) / 256.0)),
+                (Colors::LYellow, vec3((0xff as f32) / 256.0, (0xff as f32) / 256.0, (0x90 as f32) / 256.0)),
+                (Colors::Magenta, vec3((0xff as f32) / 256.0, (0x00 as f32) / 256.0, (0xa0 as f32) / 256.0)),
+                (Colors::LTeal, vec3((0x20 as f32) / 256.0, (0xff as f32) / 256.0, (0xdc as f32) / 256.0)),
+                (Colors::LViolet, vec3((0xb8 as f32) / 256.0, (0xa8 as f32) / 256.0, (0xff as f32) / 256.0)),
+                (Colors::LPink, vec3((0xff as f32) / 256.0, (0x80 as f32) / 256.0, (0x80 as f32) / 256.0)),
+                (Colors::Mustard, vec3((0xb4 as f32) / 256.0, (0xb4 as f32) / 256.0, (0x00 as f32) / 256.0)),
+                (Colors::BlueSlate, vec3((0xa0 as f32) / 256.0, (0xc0 as f32) / 256.0, (0xd0 as f32) / 256.0)),
+                (Colors::DeepLBlue, vec3((0x00 as f32) / 256.0, (0xb0 as f32) / 256.0, (0xff as f32) / 256.0)),
+                (Colors::Shade, vec3((0x28 as f32) / 256.0, (0x28 as f32) / 256.0, (0x28 as f32) / 256.0)),
             ]),
             color_table: HashMap::from_iter([
                 (
@@ -624,7 +626,42 @@ impl ColorService {
         */
     }
 
-    pub fn build_gamma_table(&mut self, gamma: i64) -> () {
+    pub fn random(&self, rng: &mut Random) -> Colors {
+        match rng.randint0(29) {
+            0 => Colors::Dark,
+            1 => Colors::White,
+            2 => Colors::Slate,
+            3 => Colors::Orange,
+            4 => Colors::Red,
+            5 => Colors::Green,
+            6 => Colors::Blue,
+            7 => Colors::Umber,
+            8 => Colors::LDark,
+            9 => Colors::LWhite,
+            10 => Colors::LPurple,
+            11 => Colors::Yellow,
+            12 => Colors::LRed,
+            13 => Colors::LGreen,
+            14 => Colors::LBlue,
+            15 => Colors::LUmber,
+            16 => Colors::Purple,
+            17 => Colors::Violet,
+            18 => Colors::Teal,
+            19 => Colors::Mud,
+            20 => Colors::LYellow,
+            21 => Colors::Magenta,
+            22 => Colors::LTeal,
+            23 => Colors::LViolet,
+            24 => Colors::LPink,
+            25 => Colors::Mustard,
+            26 => Colors::BlueSlate,
+            27 => Colors::DeepLBlue,
+            28 => Colors::Shade,
+            _ => Colors::Dark
+        }
+    }
+
+    pub fn build_gamma_table(&mut self, gamma: i64) {
         self.gamma_table[0] = 0;
         self.gamma_table[255] = 255;
 

@@ -116,7 +116,7 @@ impl Engine {
         let colors = crate::colors::ColorService::new();
 
         let mut rng = Random::new();
-        let mut grid = vec![vec![self.font.random(&mut rng); grid_width]; grid_height];
+        let mut grid = vec![vec![('.', colors.angband_color_table[&crate::colors::Colors::White], colors.angband_color_table[&crate::colors::Colors::Dark]); grid_width]; grid_height];
 
         let mut camera = camera::Camera::offset(20.0, 30.0, 10.0, 0.0, -1.0, -0.01);
         // camera.mode = camera::CameraMode::Offset (glm::vec3(0.0, -1.0, -0.01));
@@ -164,7 +164,10 @@ impl Engine {
                         camera.strafe(1.0);
                     },
                     WindowEvent::Key(Key::Space, _, Action::Release, _) => {
-                        grid = vec![vec![self.font.random(&mut rng); grid_width]; grid_height];
+                        let font = &self.font;
+                        grid = (0..grid_height).map(|_| {
+                            (0..grid_width).map(|_| {(font.random(&mut rng), colors.angband_color_table[&colors.random(&mut rng)], colors.angband_color_table[&colors.random(&mut rng)])}).collect()
+                        }).collect();
                     }
                     _ => (),
                 }
@@ -179,7 +182,7 @@ impl Engine {
 
             let mut drawn = 0;
             for (y, r) in grid.iter().enumerate() {
-                for (x, c) in r.iter().enumerate() {
+                for (x, (ch, fg, bg)) in r.iter().enumerate() {
                     if (y as f32) < camera.position.y + 30.0 && (y as f32) > camera.position.y - 30.0
                         && (x as f32) < camera.position.x + 45.0 && (x as f32) > camera.position.x - 45.0 {
                             let model = glm::translate(&identity, &glm::vec3(x as f32, 0.0, y as f32));
@@ -188,10 +191,10 @@ impl Engine {
                             self.gl.specify_matrix_parameter(&shader, "view", &camera.view);
                             self.gl.specify_matrix_parameter(&shader, "projection", &projection);
         
-                            self.gl.specify_vector_parameter(&shader, "fgColor", &glm::vec3(1.0, 1.0, 1.0));
-                            self.gl.specify_vector_parameter(&shader, "bgColor", &glm::vec3(0.0, 0.0, 0.0));
+                            self.gl.specify_vector_parameter(&shader, "fgColor", fg);
+                            self.gl.specify_vector_parameter(&shader, "bgColor", bg);
             
-                            self.gl.activate_texture(self.font.char(*c));
+                            self.gl.activate_texture(self.font.char(*ch));
                             self.gl.render_mesh(&floor_mesh);
                             drawn += 1;
                     }
