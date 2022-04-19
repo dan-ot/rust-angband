@@ -3,7 +3,7 @@ use std::sync::mpsc::Receiver;
 use std::ffi::{CString, c_void};
 use glfw::{Glfw, Context};
 use std::os::raw::c_void as os_void;
-use nalgebra_glm::TMat4;
+use nalgebra_glm::{TMat4, TVec3};
 use crate::engine::texture::Texture;
 use crate::engine::shader::Shader;
 use crate::engine::vertices::MeshKit;
@@ -107,6 +107,14 @@ impl Gl {
             let n = CString::new(name).unwrap();
             let loc = gl::GetUniformLocation(shader.id, n.as_ptr());
             gl::UniformMatrix4fv(loc, 1, gl::FALSE, nalgebra_glm::value_ptr(matrix).as_ptr());
+        }
+    }
+
+    pub fn specify_vector_parameter(&self, shader: &Shader, name: &str, vector: &TVec3<f32>) {
+        unsafe {
+            let n = CString::new(name).unwrap();
+            let loc = gl::GetUniformLocation(shader.id, n.as_ptr());
+            gl::Uniform3f(loc, vector.x, vector.y, vector.z);
         }
     }
 

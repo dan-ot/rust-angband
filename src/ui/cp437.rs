@@ -1,15 +1,17 @@
+use crate::random::Random;
 use std::collections::HashMap;
 use rusttype::{Font, Scale, point};
 use crate::engine::texture::Texture;
 
 pub struct Cp437 {
+    set: Vec<char>,
     code_map: HashMap<char, usize>,
     textures: Vec<Texture>,
 }
 
 impl Cp437 {
-    pub fn set() -> Vec<char> {
-        vec!('\u{0020}', '\u{263A}', '\u{263B}', '\u{2665}', '\u{2666}', '\u{2663}', '\u{2660}', 
+    pub fn from_face(face: &Font, scale: f32) -> Self {
+        let set = vec!('\u{0020}', '\u{263A}', '\u{263B}', '\u{2665}', '\u{2666}', '\u{2663}', '\u{2660}', 
             '\u{2022}', '\u{25D8}', '\u{25CB}', '\u{25D9}', '\u{2642}', '\u{2640}', '\u{266A}', '\u{266B}', '\u{263C}', '\u{25BA}',
             '\u{25C4}', '\u{2195}', '\u{203C}', '\u{00B6}', '\u{00A7}', '\u{25AC}', '\u{21A8}', '\u{2191}', '\u{2193}', '\u{2192}',
             '\u{2190}', '\u{221F}', '\u{2194}', '\u{25B2}', '\u{25BC}', '\u{0020}', '\u{0021}', '\u{0022}', '\u{0023}', '\u{0024}',
@@ -35,11 +37,7 @@ impl Cp437 {
             '\u{03C0}', '\u{03A3}', '\u{03C3}', '\u{00B5}', '\u{03C4}', '\u{03A6}', '\u{0398}', '\u{03A9}', '\u{03B4}', '\u{221E}',
             '\u{03C6}', '\u{03B5}', '\u{2229}', '\u{2261}', '\u{00B1}', '\u{2265}', '\u{2264}', '\u{2320}', '\u{2321}', '\u{00F7}',
             '\u{2248}', '\u{00B0}', '\u{2219}', '\u{00B7}', '\u{221A}', '\u{207F}', '\u{00B2}', '\u{25A0}', '\u{00A0}'
-        )
-    }
-
-    pub fn from_face(face: &Font, scale: f32) -> Self {
-        let set = Cp437::set();
+        );
         let mut map = HashMap::with_capacity(set.len());
         let mut vec = Vec::<Texture>::with_capacity(set.len());
         let rt_scale = Scale { x: scale, y: scale };
@@ -53,6 +51,7 @@ impl Cp437 {
         }
 
         Cp437 {
+            set,
             code_map: map,
             textures: vec
         }
@@ -60,5 +59,14 @@ impl Cp437 {
 
     pub fn code(&self, code: usize) -> &Texture {
         &self.textures[code]
+    }
+
+    pub fn char(&self, ch: char) -> &Texture {
+        &self.textures[self.code_map[&ch]]
+    }
+
+    pub fn random(&self, rng: &mut Random) -> char {
+        let pick = rng.randint0(self.set.len() as i32);
+        self.set[pick as usize]
     }
 }

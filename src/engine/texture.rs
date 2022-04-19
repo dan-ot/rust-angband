@@ -62,19 +62,6 @@ impl Texture {
 
     pub fn from_glyph(glyph: &PositionedGlyph, index: usize, vmetrics: VMetrics) -> Self {
         let mut tex = 0;
-
-        // let metrics = glyph.metrics();
-        // let g_w = (metrics.width);
-        // let g_h = (metrics.height);
-        // let g_hby = (metrics.horiBearingY);
-
-        // let drop = 0;// g_h - g_hby;
-        // print!("{}: gw: {}, gh: {}, ghby: {}, drop: {}, desc: {}, box: {}", index, g_w, g_h, g_hby, drop, font_descender, font_box_size);
-        
-        // let left = (font_box_size / 2) - (g_w as u32 / 64 / 2);
-        // let bottom = (font_box_size / 2) - (g_h as u32 / 64 / 2); // (font_descender + drop);
-        // println!(" => ({}, {}) to ({}, {})", left, bottom, left + (g_w as u32 / 64), bottom + (g_h as u32 / 64));
-        // glyph.render_glyph(RenderMode::Normal).unwrap();
         
         unsafe {
             gl::GenTextures(1, &mut tex);
@@ -92,8 +79,7 @@ impl Texture {
             match glyph.pixel_bounding_box() {
                 Some (bb) => {
                     let left = (scale.x as i32 - bb.width()) / 2;
-                    let top = std::cmp::max(bb.min.y + (baseline as i32), 0); //if bb.height() > (vmetrics.ascent as i32) {0} else {vmetrics.ascent as i32 - bb.height()};
-                    println!("{}: {} by {} at ({}, {}) - bb.min {} bb.max {}", index, bb.width(), bb.height(), left, top, bb.min.y, bb.max.y);
+                    let top = std::cmp::max(bb.min.y + (baseline as i32), 0);
                     glyph.draw(|px, py, c| {
                         let color = (c * (u8::MAX as f32)) as u8;
                         let x = left as u32 + px;
@@ -107,13 +93,6 @@ impl Texture {
                     println!("{}: No pixels", index);
                 }
             }
-
-            // for (index, px) in source.buffer().iter().enumerate() {
-            //     let i: u32 = index.try_into().unwrap();
-            //     let x = (i % (g_w as u32 / 64)) + left;
-            //     let y = (i / (g_w as u32 / 64)) + bottom;
-            //     target.put_pixel(x, y, image::Rgb([*px, *px, *px]));
-            // }
 
             gl::TexImage2D(
                 gl::TEXTURE_2D,

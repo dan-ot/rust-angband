@@ -18,7 +18,7 @@ impl MeshKit {
     /// Take the vertices, and zip them with each member of data, to make
     /// data-per-vertex. Will probably need to extend data storage for
     /// shaders that have inputs other than vec3
-    pub fn new(vertices_with_data: &[(Vec3, Vec3, Vec2)], raw_indices: &[u32]) -> MeshKit {
+    pub fn new(vertices_with_data: &[(Vec3, Vec2)], raw_indices: &[u32]) -> MeshKit {
         let mut vao: u32 = 0;
         let mut ebo: u32 = 0;
         let mut vbo: u32 = 0;
@@ -26,9 +26,8 @@ impl MeshKit {
         let mut as_vec = Vec::<f32>::new();
         let indices = Vec::from(raw_indices);
         
-        for (vert, color, tex) in vertices_with_data.iter() {
+        for (vert, tex) in vertices_with_data.iter() {
             as_vec.extend([vert.x, vert.y, vert.z]);
-            as_vec.extend([color.x, color.y, color.z]);
             as_vec.extend([tex.x, tex.y]);
         }
 
@@ -57,7 +56,6 @@ impl MeshKit {
             );
 
             let info_per_vertex = 3 // for the vertex
-                + 3 // for the color
                 + 2; // for the texel
             let row_size: i32 = (info_per_vertex * sf32).try_into().unwrap();
 
@@ -73,27 +71,15 @@ impl MeshKit {
             );
             gl::EnableVertexAttribArray(0);
 
-            // Color binding
             gl::VertexAttribPointer(
                 1,
-                3,
+                2,
                 gl::FLOAT,
                 gl::FALSE,
                 row_size,
                 (3 * sf32) as *const c_void
             );
             gl::EnableVertexAttribArray(1);
-
-            // Texture coord binding
-            gl::VertexAttribPointer(
-                2,
-                2,
-                gl::FLOAT,
-                gl::FALSE,
-                row_size,
-                ((3 + 3) * sf32) as *const c_void
-            );
-            gl::EnableVertexAttribArray(2);
 
             // Bind to 0 means release/unfocus
             gl::BindBuffer(gl::ARRAY_BUFFER, 0);

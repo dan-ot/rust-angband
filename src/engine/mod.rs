@@ -46,10 +46,10 @@ impl Engine {
         .unwrap();
 
         let floor_vertex_data = [
-            (glm::vec3( 0.5,  0.0,  0.5), glm::vec3(1.0, 1.0, 1.0), glm::vec2(1.0, 1.0)),
-            (glm::vec3( 0.5,  0.0, -0.5), glm::vec3(1.0, 1.0, 1.0), glm::vec2(1.0, 0.0)),
-            (glm::vec3(-0.5,  0.0, -0.5), glm::vec3(1.0, 1.0, 1.0), glm::vec2(0.0, 0.0)),
-            (glm::vec3(-0.5,  0.0,  0.5), glm::vec3(1.0, 1.0, 1.0), glm::vec2(0.0, 1.0))
+            (glm::vec3( 0.5,  0.0,  0.5), glm::vec2(1.0, 1.0)),
+            (glm::vec3( 0.5,  0.0, -0.5), glm::vec2(1.0, 0.0)),
+            (glm::vec3(-0.5,  0.0, -0.5), glm::vec2(0.0, 0.0)),
+            (glm::vec3(-0.5,  0.0,  0.5), glm::vec2(0.0, 1.0))
         ];
         let floor_indices = [
             0, 1, 3,
@@ -58,10 +58,10 @@ impl Engine {
         let floor_mesh = vertices::MeshKit::new(&floor_vertex_data, &floor_indices);
 
         let standing_vertex_data = [
-            (glm::vec3( 0.5,  0.5,  0.0), glm::vec3(1.0, 1.0, 1.0), glm::vec2(1.0, 1.0)),
-            (glm::vec3( 0.5, -0.5,  0.0), glm::vec3(1.0, 1.0, 1.0), glm::vec2(1.0, 0.0)),
-            (glm::vec3(-0.5, -0.5,  0.0), glm::vec3(1.0, 1.0, 1.0), glm::vec2(0.0, 0.0)),
-            (glm::vec3(-0.5,  0.5,  0.0), glm::vec3(1.0, 1.0, 1.0), glm::vec2(0.0, 1.0))
+            (glm::vec3( 0.5,  0.5,  0.0), glm::vec2(1.0, 1.0)),
+            (glm::vec3( 0.5, -0.5,  0.0), glm::vec2(1.0, 0.0)),
+            (glm::vec3(-0.5, -0.5,  0.0), glm::vec2(0.0, 0.0)),
+            (glm::vec3(-0.5,  0.5,  0.0), glm::vec2(0.0, 1.0))
         ];
         let standing_indices = [
             0, 1, 3,
@@ -70,22 +70,22 @@ impl Engine {
         let standing_mesh = vertices::MeshKit::new(&standing_vertex_data, &standing_indices);
 
         let cube_vertex_data = [
-                (glm::vec3(-0.5, -0.5, -0.5), glm::vec3(1.0, 1.0, 1.0), glm::vec2(0.0, 0.0)),
-                (glm::vec3( 0.5, -0.5, -0.5), glm::vec3(1.0, 1.0, 1.0), glm::vec2(1.0, 0.0)),
-                (glm::vec3( 0.5,  0.5, -0.5), glm::vec3(1.0, 1.0, 1.0), glm::vec2(1.0, 1.0)),
-                (glm::vec3(-0.5,  0.5, -0.5), glm::vec3(1.0, 1.0, 1.0), glm::vec2(0.0, 1.0)),
-                (glm::vec3(-0.5, -0.5,  0.5), glm::vec3(1.0, 0.0, 1.0), glm::vec2(0.0, 0.0)),
-                (glm::vec3( 0.5, -0.5,  0.5), glm::vec3(1.0, 0.0, 1.0), glm::vec2(1.0, 0.0)),
-                (glm::vec3( 0.5,  0.5,  0.5), glm::vec3(1.0, 0.0, 1.0), glm::vec2(1.0, 1.0)),
-                (glm::vec3(-0.5,  0.5,  0.5), glm::vec3(1.0, 0.0, 1.0), glm::vec2(0.0, 1.0)),
-                (glm::vec3(-0.5,  0.5,  0.5), glm::vec3(1.0, 1.0, 0.0), glm::vec2(1.0, 0.0)),
-                (glm::vec3(-0.5,  0.5, -0.5), glm::vec3(1.0, 1.0, 0.0), glm::vec2(1.0, 1.0)),
-                (glm::vec3(-0.5, -0.5, -0.5), glm::vec3(1.0, 1.0, 0.0), glm::vec2(0.0, 1.0)),
-                (glm::vec3( 0.5,  0.5,  0.5), glm::vec3(0.0, 1.0, 1.0), glm::vec2(1.0, 0.0)),
-                (glm::vec3( 0.5, -0.5, -0.5), glm::vec3(0.0, 1.0, 1.0), glm::vec2(0.0, 1.0)),
-                (glm::vec3( 0.5, -0.5,  0.5), glm::vec3(0.0, 1.0, 1.0), glm::vec2(0.0, 0.0)),
-                (glm::vec3( 0.5, -0.5, -0.5), glm::vec3(0.0, 0.0, 1.0), glm::vec2(1.0, 1.0)),
-                (glm::vec3(-0.5,  0.5,  0.5), glm::vec3(0.0, 0.0, 1.0), glm::vec2(0.0, 0.0)),
+                (glm::vec3(-0.5, -0.5, -0.5), glm::vec2(0.0, 0.0)),
+                (glm::vec3( 0.5, -0.5, -0.5), glm::vec2(1.0, 0.0)),
+                (glm::vec3( 0.5,  0.5, -0.5), glm::vec2(1.0, 1.0)),
+                (glm::vec3(-0.5,  0.5, -0.5), glm::vec2(0.0, 1.0)),
+                (glm::vec3(-0.5, -0.5,  0.5), glm::vec2(0.0, 0.0)),
+                (glm::vec3( 0.5, -0.5,  0.5), glm::vec2(1.0, 0.0)),
+                (glm::vec3( 0.5,  0.5,  0.5), glm::vec2(1.0, 1.0)),
+                (glm::vec3(-0.5,  0.5,  0.5), glm::vec2(0.0, 1.0)),
+                (glm::vec3(-0.5,  0.5,  0.5), glm::vec2(1.0, 0.0)),
+                (glm::vec3(-0.5,  0.5, -0.5), glm::vec2(1.0, 1.0)),
+                (glm::vec3(-0.5, -0.5, -0.5), glm::vec2(0.0, 1.0)),
+                (glm::vec3( 0.5,  0.5,  0.5), glm::vec2(1.0, 0.0)),
+                (glm::vec3( 0.5, -0.5, -0.5), glm::vec2(0.0, 1.0)),
+                (glm::vec3( 0.5, -0.5,  0.5), glm::vec2(0.0, 0.0)),
+                (glm::vec3( 0.5, -0.5, -0.5), glm::vec2(1.0, 1.0)),
+                (glm::vec3(-0.5,  0.5,  0.5), glm::vec2(0.0, 0.0)),
         ];
         let cube_indices = [
             0, 1, 2,
@@ -109,20 +109,27 @@ impl Engine {
 
         let (w, h) = self.gl.window_size();
         
-        let model = glm::identity::<f32, 4>();
+        let identity = glm::identity::<f32, 4>();
 
-        let mut camera = camera::Camera::at(0.0, 30.0, 0.0);
-        camera.mode = camera::CameraMode::Offset (glm::vec3(0.0, -1.0, -0.01));
+        let (grid_width, grid_height) = (250, 250);
 
-        let projection = glm::perspective(w / h, glm::radians(&glm::vec1(45.0)).x, 0.1, 100.0);
+        let colors = crate::colors::ColorService::new();
 
         let mut rng = Random::new();
-        let cp_437 = Cp437::set();
-        let len: i32 = cp_437.len().try_into().unwrap();
-        let mut which: usize = rng.randint0(len).try_into().unwrap();
-        println!("Showing {} ({})", which, cp_437.get(which).unwrap());
+        let mut grid = vec![vec![self.font.random(&mut rng); grid_width]; grid_height];
+
+        let mut camera = camera::Camera::offset(20.0, 30.0, 10.0, 0.0, -1.0, -0.01);
+        // camera.mode = camera::CameraMode::Offset (glm::vec3(0.0, -1.0, -0.01));
+
+        let projection = glm::perspective(w / h, glm::radians(&glm::vec1(45.0)).x, 0.1, 100.0);
+        // let projection = glm::ortho(0.0, w, 0.0, h, 0.1, 100.0);
+
+        let mut prev: f64 = 0.0;
+        let mut frame_count = 0;
         while !self.gl.should_close() {
-            let elapsed = self.gl.tick();
+            let total_elapsed = self.gl.tick();
+            let last_frame = total_elapsed - prev;
+            prev = total_elapsed;
             let events = self.gl.events();
             let mut close = false;
             for (_, event) in events {
@@ -157,8 +164,7 @@ impl Engine {
                         camera.strafe(1.0);
                     },
                     WindowEvent::Key(Key::Space, _, Action::Release, _) => {
-                        which = rng.randint0(len).try_into().unwrap();
-                        println!("Showing {} ({})", which, cp_437.get(which).unwrap());
+                        grid = vec![vec![self.font.random(&mut rng); grid_width]; grid_height];
                     }
                     _ => (),
                 }
@@ -171,15 +177,32 @@ impl Engine {
             self.gl.clear_color(0.2, 0.3, 0.3, 1.0);
             self.gl.activate_shader(&shader);
 
-            self.gl.specify_matrix_parameter(&shader, "model", &model);
-            self.gl.specify_matrix_parameter(&shader, "view", &camera.view());
-            self.gl.specify_matrix_parameter(&shader, "projection", &projection);
-
-            // self.gl.activate_texture(&texture);
-            self.gl.activate_texture(self.font.code(which));
-            self.gl.render_mesh(&floor_mesh);
+            let mut drawn = 0;
+            for (y, r) in grid.iter().enumerate() {
+                for (x, c) in r.iter().enumerate() {
+                    if (y as f32) < camera.position.y + 30.0 && (y as f32) > camera.position.y - 30.0
+                        && (x as f32) < camera.position.x + 45.0 && (x as f32) > camera.position.x - 45.0 {
+                            let model = glm::translate(&identity, &glm::vec3(x as f32, 0.0, y as f32));
+            
+                            self.gl.specify_matrix_parameter(&shader, "model", &model);
+                            self.gl.specify_matrix_parameter(&shader, "view", &camera.view);
+                            self.gl.specify_matrix_parameter(&shader, "projection", &projection);
+        
+                            self.gl.specify_vector_parameter(&shader, "fgColor", &glm::vec3(1.0, 1.0, 1.0));
+                            self.gl.specify_vector_parameter(&shader, "bgColor", &glm::vec3(0.0, 0.0, 0.0));
+            
+                            self.gl.activate_texture(self.font.char(*c));
+                            self.gl.render_mesh(&floor_mesh);
+                            drawn += 1;
+                    }
+                }
+            }
 
             self.gl.swap();
+            frame_count += 1;
+            if frame_count % 5 == 0 {
+                println!("FPS ~ {}, {} drawn", 1.0 / last_frame, drawn);
+            }
         }
     }
 }
