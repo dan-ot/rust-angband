@@ -122,11 +122,11 @@ impl Engine {
         let mut rng = Random::new();
         let mut grid = vec![vec![('.', colors.angband_color_table[&crate::colors::Colors::White], colors.angband_color_table[&crate::colors::Colors::Dark]); grid_width]; grid_height];
 
-        let mut camera = camera::Camera::offset(0.0, 0.0, 10.0, 0.0, -1.0, -0.01);
+        let mut camera = camera::Camera::offset(0.0, 10.0, 0.0, 0.0, -1.0, -0.01);
 
         let zoom = 40.0;
         let (size_x, size_y) = (w / zoom + 1.0, h / zoom + 1.0);
-        println!("{} by {} at ({}, {}) - ({}, {}) to ({}, {})", size_x, size_y, camera.position.x, camera.position.y, camera.position.x - size_x, camera.position.y - size_y, camera.position.x + size_x, camera.position.y + size_y);
+        println!("{} by {} at ({}, {}) - ({}, {}) to ({}, {})", size_x, size_y, camera.position.x, camera.position.z, camera.position.x - size_x, camera.position.z - size_y, camera.position.x + size_x, camera.position.z + size_y);
         // let projection = glm::perspective(w / h, glm::radians(&glm::vec1(45.0)).x, 0.1, 100.0);
         let projection = glm::ortho(0.0, w / zoom, 0.0, h / zoom, -100.0, 100.0);
 
@@ -147,37 +147,38 @@ impl Engine {
                     },
                     WindowEvent::Key(Key::W, _, Action::Release, Modifiers::Shift) => {
                         camera.step(-10.0);
-                        println!("{} by {} at ({}, {}) - ({}, {}) to ({}, {})", size_x, size_y, camera.position.x, camera.position.y, camera.position.x - size_x, camera.position.y - size_y, camera.position.x + size_x, camera.position.y + size_y);
+                        println!("{} by {} at ({}, {}) - ({}, {}) to ({}, {})", size_x, size_y, camera.position.x, camera.position.z, camera.position.x - size_x, camera.position.z - size_y, camera.position.x + size_x, camera.position.z + size_y);
                     },
                     WindowEvent::Key(Key::W, _, Action::Release, _) => {
                         camera.step(-1.0);
-                        println!("{} by {} at ({}, {}) - ({}, {}) to ({}, {})", size_x, size_y, camera.position.x, camera.position.y, camera.position.x - size_x, camera.position.y - size_y, camera.position.x + size_x, camera.position.y + size_y);
+                        println!("{} by {} at ({}, {}) - ({}, {}) to ({}, {})", size_x, size_y, camera.position.x, camera.position.z, camera.position.x - size_x, camera.position.z - size_y, camera.position.x + size_x, camera.position.z + size_y);
                     },
                     WindowEvent::Key(Key::S, _, Action::Release, Modifiers::Shift) => {
                         camera.step(10.0);
-                        println!("{} by {} at ({}, {}) - ({}, {}) to ({}, {})", size_x, size_y, camera.position.x, camera.position.y, camera.position.x - size_x, camera.position.y - size_y, camera.position.x + size_x, camera.position.y + size_y);
+                        println!("{} by {} at ({}, {}) - ({}, {}) to ({}, {})", size_x, size_y, camera.position.x, camera.position.z, camera.position.x - size_x, camera.position.z - size_y, camera.position.x + size_x, camera.position.z + size_y);
                     },
                     WindowEvent::Key(Key::S, _, Action::Release, _) => {
                         camera.step(1.0);
-                        println!("{} by {} at ({}, {}) - ({}, {}) to ({}, {})", size_x, size_y, camera.position.x, camera.position.y, camera.position.x - size_x, camera.position.y - size_y, camera.position.x + size_x, camera.position.y + size_y);
+                        println!("{} by {} at ({}, {}) - ({}, {}) to ({}, {})", size_x, size_y, camera.position.x, camera.position.z, camera.position.x - size_x, camera.position.z - size_y, camera.position.x + size_x, camera.position.z + size_y);
                     },
                     WindowEvent::Key(Key::D, _, Action::Release, Modifiers::Shift) => {
                         camera.strafe(-10.0);
-                        println!("{} by {} at ({}, {}) - ({}, {}) to ({}, {})", size_x, size_y, camera.position.x, camera.position.y, camera.position.x - size_x, camera.position.y - size_y, camera.position.x + size_x, camera.position.y + size_y);
+                        println!("{} by {} at ({}, {}) - ({}, {}) to ({}, {})", size_x, size_y, camera.position.x, camera.position.z, camera.position.x - size_x, camera.position.z - size_y, camera.position.x + size_x, camera.position.z + size_y);
                     },
                     WindowEvent::Key(Key::D, _, Action::Release, _) => {
                         camera.strafe(-1.0);
-                        println!("{} by {} at ({}, {}) - ({}, {}) to ({}, {})", size_x, size_y, camera.position.x, camera.position.y, camera.position.x - size_x, camera.position.y - size_y, camera.position.x + size_x, camera.position.y + size_y);
+                        println!("{} by {} at ({}, {}) - ({}, {}) to ({}, {})", size_x, size_y, camera.position.x, camera.position.z, camera.position.x - size_x, camera.position.z - size_y, camera.position.x + size_x, camera.position.z + size_y);
                     },
                     WindowEvent::Key(Key::A, _, Action::Release, Modifiers::Shift) => {
                         camera.strafe(10.0);
-                        println!("{} by {} at ({}, {}) - ({}, {}) to ({}, {})", size_x, size_y, camera.position.x, camera.position.y, camera.position.x - size_x, camera.position.y - size_y, camera.position.x + size_x, camera.position.y + size_y);
+                        println!("{} by {} at ({}, {}) - ({}, {}) to ({}, {})", size_x, size_y, camera.position.x, camera.position.z, camera.position.x - size_x, camera.position.z - size_y, camera.position.x + size_x, camera.position.z + size_y);
                     },
                     WindowEvent::Key(Key::A, _, Action::Release, _) => {
                         camera.strafe(1.0);
-                        println!("{} by {} at ({}, {}) - ({}, {}) to ({}, {})", size_x, size_y, camera.position.x, camera.position.y, camera.position.x - size_x, camera.position.y - size_y, camera.position.x + size_x, camera.position.y + size_y);
+                        println!("{} by {} at ({}, {}) - ({}, {}) to ({}, {})", size_x, size_y, camera.position.x, camera.position.z, camera.position.x - size_x, camera.position.z - size_y, camera.position.x + size_x, camera.position.z + size_y);
                     },
                     WindowEvent::Key(Key::Space, _, Action::Release, _) => {
+                        println!("Grid swap!");
                         let font = &self.font;
                         for row in grid.iter_mut() {
                             for entry in row.iter_mut() {
@@ -201,7 +202,7 @@ impl Engine {
             let mut drawn = 0;
             for (y, r) in grid.iter().enumerate() {
                 for (x, (ch, fg, bg)) in r.iter().enumerate() {
-                    if (y as f32) < camera.position.y + size_y && (y as f32) > camera.position.y - size_y
+                    if (y as f32) < camera.position.z + size_y && (y as f32) > camera.position.z - size_y
                         && (x as f32) < camera.position.x + size_x && (x as f32) > camera.position.x - size_x {
                             let model = glm::translate(&identity, &glm::vec3(x as f32, 0.0, y as f32));
             
