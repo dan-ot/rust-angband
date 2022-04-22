@@ -10,6 +10,7 @@ use std::convert::TryFrom;
 pub mod ui_event;
 pub mod graphics;
 pub mod cp437;
+pub mod fon;
 
 // TODO: in the source, these are a linked list...
 pub struct TerminalWindow {

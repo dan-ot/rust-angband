@@ -31,10 +31,14 @@ impl Engine {
         let content = std::fs::read(Path::new("resources/fonts/FiraCode-Medium.ttf")).unwrap();
         let face = Font::try_from_vec(content).unwrap();
 
+        let fon_content = std::fs::read(Path::new("resources/fonts/8x8x.fon")).unwrap();
+
+        let loaded_fonts = crate::ui::fon::load_fonts(&fon_content);
+
         Engine {
             gl: glwrap::Gl::new(),
             graphics_modes: graphics,
-            font: Cp437::from_face(&face, 255.0)
+            font: Cp437::from_cp1252(loaded_fonts.first().unwrap().to_vec(), 256)
         }
     }
 
@@ -52,8 +56,8 @@ impl Engine {
             (glm::vec3(-0.5,  0.0,  0.5), glm::vec2(0.0, 1.0))
         ];
         let floor_indices = [
+            1, 2, 3,
             0, 1, 3,
-            1, 2, 3
         ];
         let floor_mesh = vertices::MeshKit::new(&floor_vertex_data, &floor_indices);
 
@@ -118,11 +122,13 @@ impl Engine {
         let mut rng = Random::new();
         let mut grid = vec![vec![('.', colors.angband_color_table[&crate::colors::Colors::White], colors.angband_color_table[&crate::colors::Colors::Dark]); grid_width]; grid_height];
 
-        let mut camera = camera::Camera::offset(20.0, 30.0, 10.0, 0.0, -1.0, -0.01);
-        // camera.mode = camera::CameraMode::Offset (glm::vec3(0.0, -1.0, -0.01));
+        let mut camera = camera::Camera::offset(0.0, 0.0, 10.0, 0.0, -1.0, -0.01);
 
-        let projection = glm::perspective(w / h, glm::radians(&glm::vec1(45.0)).x, 0.1, 100.0);
-        // let projection = glm::ortho(0.0, w, 0.0, h, 0.1, 100.0);
+        let zoom = 40.0;
+        let (size_x, size_y) = (w / zoom + 1.0, h / zoom + 1.0);
+        println!("{} by {} at ({}, {}) - ({}, {}) to ({}, {})", size_x, size_y, camera.position.x, camera.position.y, camera.position.x - size_x, camera.position.y - size_y, camera.position.x + size_x, camera.position.y + size_y);
+        // let projection = glm::perspective(w / h, glm::radians(&glm::vec1(45.0)).x, 0.1, 100.0);
+        let projection = glm::ortho(0.0, w / zoom, 0.0, h / zoom, -100.0, 100.0);
 
         let mut prev: f64 = 0.0;
         let mut frame_count = 0;
@@ -141,27 +147,35 @@ impl Engine {
                     },
                     WindowEvent::Key(Key::W, _, Action::Release, Modifiers::Shift) => {
                         camera.step(-10.0);
+                        println!("{} by {} at ({}, {}) - ({}, {}) to ({}, {})", size_x, size_y, camera.position.x, camera.position.y, camera.position.x - size_x, camera.position.y - size_y, camera.position.x + size_x, camera.position.y + size_y);
                     },
                     WindowEvent::Key(Key::W, _, Action::Release, _) => {
                         camera.step(-1.0);
+                        println!("{} by {} at ({}, {}) - ({}, {}) to ({}, {})", size_x, size_y, camera.position.x, camera.position.y, camera.position.x - size_x, camera.position.y - size_y, camera.position.x + size_x, camera.position.y + size_y);
                     },
                     WindowEvent::Key(Key::S, _, Action::Release, Modifiers::Shift) => {
                         camera.step(10.0);
+                        println!("{} by {} at ({}, {}) - ({}, {}) to ({}, {})", size_x, size_y, camera.position.x, camera.position.y, camera.position.x - size_x, camera.position.y - size_y, camera.position.x + size_x, camera.position.y + size_y);
                     },
                     WindowEvent::Key(Key::S, _, Action::Release, _) => {
                         camera.step(1.0);
+                        println!("{} by {} at ({}, {}) - ({}, {}) to ({}, {})", size_x, size_y, camera.position.x, camera.position.y, camera.position.x - size_x, camera.position.y - size_y, camera.position.x + size_x, camera.position.y + size_y);
                     },
                     WindowEvent::Key(Key::D, _, Action::Release, Modifiers::Shift) => {
                         camera.strafe(-10.0);
+                        println!("{} by {} at ({}, {}) - ({}, {}) to ({}, {})", size_x, size_y, camera.position.x, camera.position.y, camera.position.x - size_x, camera.position.y - size_y, camera.position.x + size_x, camera.position.y + size_y);
                     },
                     WindowEvent::Key(Key::D, _, Action::Release, _) => {
                         camera.strafe(-1.0);
+                        println!("{} by {} at ({}, {}) - ({}, {}) to ({}, {})", size_x, size_y, camera.position.x, camera.position.y, camera.position.x - size_x, camera.position.y - size_y, camera.position.x + size_x, camera.position.y + size_y);
                     },
                     WindowEvent::Key(Key::A, _, Action::Release, Modifiers::Shift) => {
                         camera.strafe(10.0);
+                        println!("{} by {} at ({}, {}) - ({}, {}) to ({}, {})", size_x, size_y, camera.position.x, camera.position.y, camera.position.x - size_x, camera.position.y - size_y, camera.position.x + size_x, camera.position.y + size_y);
                     },
                     WindowEvent::Key(Key::A, _, Action::Release, _) => {
                         camera.strafe(1.0);
+                        println!("{} by {} at ({}, {}) - ({}, {}) to ({}, {})", size_x, size_y, camera.position.x, camera.position.y, camera.position.x - size_x, camera.position.y - size_y, camera.position.x + size_x, camera.position.y + size_y);
                     },
                     WindowEvent::Key(Key::Space, _, Action::Release, _) => {
                         let font = &self.font;
@@ -172,9 +186,6 @@ impl Engine {
                                 entry.2 = colors.angband_color_table[&colors.random(&mut rng)];
                             }
                         }
-                        // grid = (0..grid_height).map(|_| {
-                        //     (0..grid_width).map(|_| {(font.random(&mut rng), colors.angband_color_table[&colors.random(&mut rng)], colors.angband_color_table[&colors.random(&mut rng)])}).collect()
-                        // }).collect();
                     }
                     _ => (),
                 }
@@ -190,8 +201,8 @@ impl Engine {
             let mut drawn = 0;
             for (y, r) in grid.iter().enumerate() {
                 for (x, (ch, fg, bg)) in r.iter().enumerate() {
-                    if (y as f32) < camera.position.y + 30.0 && (y as f32) > camera.position.y - 30.0
-                        && (x as f32) < camera.position.x + 45.0 && (x as f32) > camera.position.x - 45.0 {
+                    if (y as f32) < camera.position.y + size_y && (y as f32) > camera.position.y - size_y
+                        && (x as f32) < camera.position.x + size_x && (x as f32) > camera.position.x - size_x {
                             let model = glm::translate(&identity, &glm::vec3(x as f32, 0.0, y as f32));
             
                             shader.matrix_parameter("model", &model);

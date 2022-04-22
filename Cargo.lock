@@ -208,28 +208,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "freetype-rs"
-version = "0.29.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cb0589b25bed15af55e8b941aa6fdb45179b2edec35829ebf639097738a2afbe"
-dependencies = [
- "bitflags",
- "freetype-sys",
- "libc",
-]
-
-[[package]]
-name = "freetype-sys"
-version = "0.15.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ac95ab6040ffce2a8e86c01e050bedf3d2763a17ae1719a5d4231da3078b1028"
-dependencies = [
- "cmake",
- "libc",
- "pkg-config",
-]
-
-[[package]]
 name = "futures-core"
 version = "0.3.21"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -583,12 +561,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "pkg-config"
-version = "0.3.25"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1df8c4ec4b0627e53bdf214615ad287367e482558cf84b109250b37464dc03ae"
-
-[[package]]
 name = "png"
 version = "0.17.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -708,7 +680,6 @@ dependencies = [
 name = "rust-angband"
 version = "0.1.0"
 dependencies = [
- "freetype-rs",
  "glfw",
  "image",
  "nalgebra-glm",

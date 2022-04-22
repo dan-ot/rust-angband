@@ -1,6 +1,6 @@
 use rusttype::VMetrics;
 use rusttype::PositionedGlyph;
-use image::{ DynamicImage, ColorType, ImageFormat, Rgba };
+use image::{ ColorType, RgbImage, Rgb };
 use std::path::Path;
 use std::convert::TryInto;
 use std::ffi::c_void;
@@ -60,9 +60,62 @@ impl Texture {
         }
     }
 
-    pub fn from_glyph(glyph: &PositionedGlyph, index: usize, vmetrics: VMetrics) -> Self {
+    pub fn from_glyph(glyph: &PositionedGlyph, vmetrics: VMetrics) -> Self {
+        let scale = glyph.scale();
+        let mut target = RgbImage::new(scale.x as u32 + 1, scale.y as u32 + 1);
+        let baseline = scale.y + vmetrics.descent;
+
+        match glyph.pixel_bounding_box() {
+            Some (bb) => {
+                let left = (scale.x as i32 - bb.width()) / 2;
+                let top = std::cmp::max(bb.min.y + (baseline as i32), 0);
+                glyph.draw(|px, py, c| {
+                    let color = (c * (u8::MAX as f32)) as u8;
+                    let x = left as u32 + px;
+                    let y = top as u32 + py;
+                    if x < target.width() && y < target.height() && y > 0 {
+                        target.put_pixel(x, y, Rgb([color, color, color]));
+                    }
+                });
+            },
+            None => {
+            }
+        }
+
+        Texture::from_image(&target)
+    }
+
+    pub fn from_padded_image(img: &RgbImage, pad_px: u32, target_size: u32) -> Self {
+        let mut image = RgbImage::new(target_size, target_size);
+
+        let interior_dimension = target_size - (pad_px * 2);
+
+        let scale_factor = interior_dimension / img.width();
+
+        for i_x in 0..img.width() {
+            for i_y in 0..img.height() {
+                let [r, g, b] = img.get_pixel(i_x, i_y).0;
+
+                for x in 0..scale_factor {
+                    for y in 0..scale_factor {
+
+                        image.put_pixel(
+                            pad_px + (i_x * scale_factor) + x,
+                            pad_px + (i_y * scale_factor) + y,
+                            Rgb([r, g, b])
+                        );
+                    }
+                }
+
+            }
+        }
+
+        Texture::from_image(&image)
+    }
+
+    pub fn from_image(img: &RgbImage) -> Self {
         let mut tex = 0;
-        
+
         unsafe {
             gl::GenTextures(1, &mut tex);
             gl::BindTexture(gl::TEXTURE_2D, tex);
@@ -72,38 +125,16 @@ impl Texture {
             gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::LINEAR_MIPMAP_LINEAR.try_into().unwrap());
             gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::LINEAR.try_into().unwrap());
 
-            let scale = glyph.scale();
-            let mut target = image::RgbImage::new(scale.x as u32 + 1, scale.y as u32 + 1);
-            let baseline = scale.y + vmetrics.descent;
-
-            match glyph.pixel_bounding_box() {
-                Some (bb) => {
-                    let left = (scale.x as i32 - bb.width()) / 2;
-                    let top = std::cmp::max(bb.min.y + (baseline as i32), 0);
-                    glyph.draw(|px, py, c| {
-                        let color = (c * (u8::MAX as f32)) as u8;
-                        let x = left as u32 + px;
-                        let y = top as u32 + py;
-                        if x < target.width() && y < target.height() && y > 0 {
-                            target.put_pixel(x, y, image::Rgb([color, color, color]));
-                        }
-                    });
-                },
-                None => {
-                    println!("{}: No pixels", index);
-                }
-            }
-
             gl::TexImage2D(
                 gl::TEXTURE_2D,
                 0,
                 gl::RGB8.try_into().unwrap(),
-                target.width().try_into().unwrap(),
-                target.height().try_into().unwrap(),
+                img.width().try_into().unwrap(),
+                img.height().try_into().unwrap(),
                 0,
                 gl::RGB,
                 gl::UNSIGNED_BYTE,
-                target.as_ptr() as *const c_void
+                img.as_ptr() as *const c_void
             );
 
             gl::GenerateMipmap(gl::TEXTURE_2D);

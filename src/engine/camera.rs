@@ -31,9 +31,9 @@ impl Camera {
 
     fn view(position: &TVec3<f32>, up: &TVec3<f32>, mode: &CameraMode) -> TMat4<f32> {
         match mode {
-            CameraMode::Offset (o) => look_at(&position, &(position + o), &up),
-            CameraMode::Target (t) => look_at(&position, &t, &up),
-            CameraMode::Between (t, u) => look_at(&position, &(t - u), &up)
+            CameraMode::Offset (o) => look_at(position, &(position + o), up),
+            CameraMode::Target (t) => look_at(position, t, up),
+            CameraMode::Between (t, u) => look_at(position, &(t - u), up)
         }
     }
 
