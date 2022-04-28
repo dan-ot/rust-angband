@@ -33,7 +33,7 @@ impl Engine {
 
         let fon_content = std::fs::read(Path::new("resources/fonts/8x8x.fon")).unwrap();
 
-        let loaded_fonts = crate::ui::fon::load_fonts(&fon_content);
+        let loaded_fonts = crate::ui::fon::load_fonts(&fon_content).unwrap();
 
         Engine {
             gl: glwrap::Gl::new(),
@@ -106,10 +106,6 @@ impl Engine {
             11, 15, 3
         ];
         let cube_mesh = vertices::MeshKit::new(&cube_vertex_data, &cube_indices);
-
-        let texture = texture::Texture::from_file(
-            Path::new("resources/images/container.jpg")
-        );
 
         let (w, h) = self.gl.window_size();
         
@@ -222,9 +218,9 @@ impl Engine {
 
             self.gl.swap();
             frame_count += 1;
-            if frame_count % 5 == 0 {
-                println!("FPS ~ {}, {} drawn", 1.0 / last_frame, drawn);
-            }
+            // if frame_count % 5 == 0 {
+            //     println!("FPS ~ {}, {} drawn", 1.0 / last_frame, drawn);
+            // }
         }
     }
 }

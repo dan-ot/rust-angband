@@ -5,10 +5,12 @@ use image::RgbImage;
 use crate::random::Random;
 use crate::engine::texture::Texture;
 
+/// This is actually a Tileset, not a font. If we were to go to 2D sprites or 3D models, this would all go away
+/// but font-writing would not.
 pub struct Cp437 {
     set: Vec<char>,
     code_map: HashMap<char, usize>,
-    textures: Vec<Texture>,
+    textures: Vec<Texture>
 }
 
 impl Cp437 {
@@ -42,6 +44,7 @@ impl Cp437 {
         );
         let mut map = HashMap::with_capacity(set.len());
         let mut vec = Vec::<Texture>::with_capacity(set.len());
+        let mut widest = 0;
         let rt_scale = Scale { x: scale, y: scale };
 
         for (i, c) in set.iter().enumerate() {
@@ -50,6 +53,7 @@ impl Cp437 {
                 .scaled(rt_scale)
                 .positioned(point(0.0, 0.0));
             vec.push(Texture::from_glyph(&glyph, face.v_metrics(rt_scale)));
+            widest = std::cmp::max(widest, glyph.pixel_bounding_box().map_or(0, |r| {r.width()}));
         }
 
         Cp437 {
@@ -95,173 +99,9 @@ impl Cp437 {
 
         for (i, c) in set.iter().enumerate() {
             map.insert(*c, i);
-            match i {
-                0x00 | 0x20..=0x7E => {
-                    vec.push(Texture::from_padded_image(&cp1252[i], normal_pad, scale))
-                }
-                0x14 => {
-                    vec.push(Texture::from_padded_image(&cp1252[0xB6], normal_pad, scale))
-                }
-                0x15 => {
-                    vec.push(Texture::from_padded_image(&cp1252[0xA7], normal_pad, scale))
-                }
-                0x80 => {
-                    vec.push(Texture::from_padded_image(&cp1252[0xC7], normal_pad, scale))
-                }
-                0x81 => {
-                    vec.push(Texture::from_padded_image(&cp1252[0xFC], normal_pad, scale))
-                }
-                0x82 => {
-                    vec.push(Texture::from_padded_image(&cp1252[0xE9], normal_pad, scale))
-                }
-                0x83 => {
-                    vec.push(Texture::from_padded_image(&cp1252[0xE2], normal_pad, scale))
-                }
-                0x84 => {
-                    vec.push(Texture::from_padded_image(&cp1252[0xE4], normal_pad, scale))
-                }
-                0x85 => {
-                    vec.push(Texture::from_padded_image(&cp1252[0xE0], normal_pad, scale))
-                }
-                0x86 => {
-                    vec.push(Texture::from_padded_image(&cp1252[0xE5], normal_pad, scale))
-                }
-                0x88 => {
-                    vec.push(Texture::from_padded_image(&cp1252[0xEA], normal_pad, scale))
-                }
-                0x89 => {
-                    vec.push(Texture::from_padded_image(&cp1252[0xEB], normal_pad, scale))
-                }
-                0x8A => {
-                    vec.push(Texture::from_padded_image(&cp1252[0xE8], normal_pad, scale))
-                }
-                0x8B => {
-                    vec.push(Texture::from_padded_image(&cp1252[0xEF], normal_pad, scale))
-                }
-                0x8C => {
-                    vec.push(Texture::from_padded_image(&cp1252[0xEE], normal_pad, scale))
-                }
-                0x8D => {
-                    vec.push(Texture::from_padded_image(&cp1252[0xEC], normal_pad, scale))
-                }
-                0x8E => {
-                    vec.push(Texture::from_padded_image(&cp1252[0xC4], normal_pad, scale))
-                }
-                0x8F => {
-                    vec.push(Texture::from_padded_image(&cp1252[0xC5], normal_pad, scale))
-                }
-                0x90 => {
-                    vec.push(Texture::from_padded_image(&cp1252[0xC9], normal_pad, scale))
-                }
-                0x91 => {
-                    vec.push(Texture::from_padded_image(&cp1252[0xE6], normal_pad, scale))
-                }
-                0x92 => {
-                    vec.push(Texture::from_padded_image(&cp1252[0xC6], normal_pad, scale))
-                }
-                0x93 => {
-                    vec.push(Texture::from_padded_image(&cp1252[0xF4], normal_pad, scale))
-                }
-                0x94 => {
-                    vec.push(Texture::from_padded_image(&cp1252[0xF6], normal_pad, scale))
-                }
-                0x95 => {
-                    vec.push(Texture::from_padded_image(&cp1252[0xF3], normal_pad, scale))
-                }
-                0x96 => {
-                    vec.push(Texture::from_padded_image(&cp1252[0xFB], normal_pad, scale))
-                }
-                0x97 => {
-                    vec.push(Texture::from_padded_image(&cp1252[0xF9], normal_pad, scale))
-                }
-                0x98 => {
-                    vec.push(Texture::from_padded_image(&cp1252[0xFF], normal_pad, scale))
-                }
-                0x99 => {
-                    vec.push(Texture::from_padded_image(&cp1252[0xD6], normal_pad, scale))
-                }
-                0x9A => {
-                    vec.push(Texture::from_padded_image(&cp1252[0xDC], normal_pad, scale))
-                }
-                0x9B => {
-                    vec.push(Texture::from_padded_image(&cp1252[0xA2], normal_pad, scale))
-                }
-                0x9C => {
-                    vec.push(Texture::from_padded_image(&cp1252[0xA3], normal_pad, scale))
-                }
-                0x9D => {
-                    vec.push(Texture::from_padded_image(&cp1252[0xA5], normal_pad, scale))
-                }
-                0x9F => {
-                    vec.push(Texture::from_padded_image(&cp1252[0x83], normal_pad, scale))
-                }
-                0xA0 => {
-                    vec.push(Texture::from_padded_image(&cp1252[0xE1], normal_pad, scale))
-                }
-                0xA1 => {
-                    vec.push(Texture::from_padded_image(&cp1252[0xED], normal_pad, scale))
-                }
-                0xA2 => {
-                    vec.push(Texture::from_padded_image(&cp1252[0xF3], normal_pad, scale))
-                }
-                0xA3 => {
-                    vec.push(Texture::from_padded_image(&cp1252[0xFA], normal_pad, scale))
-                }
-                0xA4 => {
-                    vec.push(Texture::from_padded_image(&cp1252[0xF1], normal_pad, scale))
-                }
-                0xA5 => {
-                    vec.push(Texture::from_padded_image(&cp1252[0xD1], normal_pad, scale))
-                }
-                0xA9 => {
-                    vec.push(Texture::from_padded_image(&cp1252[0xBF], normal_pad, scale))
-                }
-                0xAA => {
-                    vec.push(Texture::from_padded_image(&cp1252[0xAC], normal_pad, scale))
-                }
-                0xAB => {
-                    vec.push(Texture::from_padded_image(&cp1252[0xBD], normal_pad, scale))
-                }
-                0xAC => {
-                    vec.push(Texture::from_padded_image(&cp1252[0xBC], normal_pad, scale))
-                }
-                0xAD => {
-                    vec.push(Texture::from_padded_image(&cp1252[0xA1], normal_pad, scale))
-                }
-                0xAE => {
-                    vec.push(Texture::from_padded_image(&cp1252[0xAB], normal_pad, scale))
-                }
-                0xAF => {
-                    vec.push(Texture::from_padded_image(&cp1252[0xBB], normal_pad, scale))
-                }
-                0xE1 => {
-                    vec.push(Texture::from_padded_image(&cp1252[0xDF], normal_pad, scale))
-                }
-                0xE6 => {
-                    vec.push(Texture::from_padded_image(&cp1252[0xB5], normal_pad, scale))
-                }
-                0xF1 => {
-                    vec.push(Texture::from_padded_image(&cp1252[0xB1], normal_pad, scale))
-                }
-                0xF6 => {
-                    vec.push(Texture::from_padded_image(&cp1252[0xF7], normal_pad, scale))
-                }
-                0xF8 => {
-                    vec.push(Texture::from_padded_image(&cp1252[0xB0], normal_pad, scale))
-                }
-                0xF9 => {
-                    vec.push(Texture::from_padded_image(&cp1252[0x95], normal_pad, scale))
-                }
-                0x07 | 0xFA => {
-                    vec.push(Texture::from_padded_image(&cp1252[0xB7], normal_pad, scale))
-                }
-                0xFD => {
-                    vec.push(Texture::from_padded_image(&cp1252[0xB2], normal_pad, scale))
-                }
-                _ => {
-                    vec.push(Texture::from_padded_image(&cp1252[0x3F], normal_pad * 2, scale))
-                }
-            }
+            let (converted_char, is_replacement) = Cp437::from_1242(i);
+
+            vec.push(Texture::from_padded_image(&cp1252[converted_char], if is_replacement { normal_pad } else {normal_pad * 2}, scale));
         }
 
         Cp437 {
@@ -271,7 +111,7 @@ impl Cp437 {
         }
     }
 
-    pub fn code(&self, code: usize) -> &Texture {
+    pub fn texture_from_code(&self, code: usize) -> &Texture {
         &self.textures[code]
     }
 
@@ -282,5 +122,65 @@ impl Cp437 {
     pub fn random(&self, rng: &mut Random) -> char {
         let pick = rng.randint0(self.set.len() as i32);
         self.set[pick as usize]
+    }
+
+    pub fn from_1242(code: usize) -> (usize, bool) {
+        match code {
+            0x00 | 0x20..=0x7E => (code, false),
+            0x14 => (0xB6, false),
+            0x15 => (0xA7, false),
+            0x80 => (0xC7, false),
+            0x81 => (0xFC, false),
+            0x82 => (0xE9, false),
+            0x83 => (0xE2, false),
+            0x84 => (0xE4, false),
+            0x85 => (0xE0, false),
+            0x86 => (0xE5, false),
+            0x88 => (0xEA, false),
+            0x89 => (0xEB, false),
+            0x8A => (0xE8, false),
+            0x8B => (0xEF, false),
+            0x8C => (0xEE, false),
+            0x8D => (0xEC, false),
+            0x8E => (0xC4, false),
+            0x8F => (0xC5, false),
+            0x90 => (0xC9, false),
+            0x91 => (0xE6, false),
+            0x92 => (0xC6, false),
+            0x93 => (0xF4, false),
+            0x94 => (0xF6, false),
+            0x95 => (0xF3, false),
+            0x96 => (0xFB, false),
+            0x97 => (0xF9, false),
+            0x98 => (0xFF, false),
+            0x99 => (0xD6, false),
+            0x9A => (0xDC, false),
+            0x9B => (0xA2, false),
+            0x9C => (0xA3, false),
+            0x9D => (0xA5, false),
+            0x9F => (0x83, false),
+            0xA0 => (0xE1, false),
+            0xA1 => (0xED, false),
+            0xA2 => (0xF3, false),
+            0xA3 => (0xFA, false),
+            0xA4 => (0xF1, false),
+            0xA5 => (0xD1, false),
+            0xA9 => (0xBF, false),
+            0xAA => (0xAC, false),
+            0xAB => (0xBD, false),
+            0xAC => (0xBC, false),
+            0xAD => (0xA1, false),
+            0xAE => (0xAB, false),
+            0xAF => (0xBB, false),
+            0xE1 => (0xDF, false),
+            0xE6 => (0xB5, false),
+            0xF1 => (0xB1, false),
+            0xF6 => (0xF7, false),
+            0xF8 => (0xB0, false),
+            0xF9 => (0x95, false),
+            0x07 | 0xFA => (0xB7, false),
+            0xFD => (0xB2, false),
+            _ => (0x3F, true)
+        }
     }
 }

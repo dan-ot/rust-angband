@@ -1,4 +1,5 @@
-use std::convert::TryInto;
+use std::num::TryFromIntError;
+use std::convert::{TryInto, Infallible};
 use image::RgbImage;
 
 fn from_word(s: &[u8]) -> u16 {
@@ -13,16 +14,16 @@ fn from_dword(s: &[u8]) -> u32 {
     (l as u32) | ((r as u32) << 16)
 }
 
-fn load_cp1252(fnt: &[u8]) -> Vec<RgbImage> {
+fn load_cp1252(fnt: &[u8]) -> Result<Vec<RgbImage>, String> {
     let version = from_word(&fnt[0..]);
     let ftype = from_word(&fnt[0x42..]);
 
     if ftype & 1 != 0 {
-        panic!("This font is a vector font.");
+        return Err(String::from("This font is a vector font."))
     }
-    let facename_offset: usize = from_dword(&fnt[0x69..]).try_into().unwrap();
+    let facename_offset: usize = from_dword(&fnt[0x69..]).try_into().map_err(translate_error)?;
     if /* facename_offset < 0 || */ facename_offset > fnt.len() {
-        panic!("Face name not contained within font data")
+        return Err(String::from("Face name not contained within font data"))
     }
     // let facename = std::str::from_utf8(&fnt[facename_offset..]).unwrap();
     // let copyright = std::str::from_utf8(&fnt[6..66]).unwrap();
@@ -46,7 +47,7 @@ fn load_cp1252(fnt: &[u8]) -> Vec<RgbImage> {
     let last_char = fnt[0x60] as u32;
 
     (first_char..=last_char).map(|i| {
-        let entry: usize = (ctstart + ctsize * (i - first_char)).try_into().unwrap();
+        let entry: usize = (ctstart + ctsize * (i - first_char)).try_into().map_err(translate_error)?;
         let width = from_word(&fnt[entry..]);
         max_width = std::cmp::max(width, max_width);
         let off = match ctsize {
@@ -57,7 +58,7 @@ fn load_cp1252(fnt: &[u8]) -> Vec<RgbImage> {
         let mut im = image::RgbImage::new(width as u32, height as u32);
         for j in 0..height {
             for k in 0..widthbytes {
-                let bytepos: usize = (off + (k as u32) * (height as u32) + (j as u32)).try_into().unwrap();
+                let bytepos: usize = (off + (k as u32) * (height as u32) + (j as u32)).try_into().map_err(translate_error)?;
                 let b = fnt[bytepos];
                 for n in 0..8 {
                     if b & (1 << n) != 0 {
@@ -66,12 +67,12 @@ fn load_cp1252(fnt: &[u8]) -> Vec<RgbImage> {
                 }
             }
         }
-        im
+        Ok(im)
     }).collect()
 }
 
-fn extract_ne_fonts(fon: &[u8], neoff: usize) -> Vec<Vec<RgbImage>> {
-    let rtable_offset: usize = from_word(&fon[neoff + 0x24..]).try_into().unwrap();
+fn extract_ne_fonts(fon: &[u8], neoff: usize) -> Result<Vec<Vec<RgbImage>>, String> {
+    let rtable_offset: usize = from_word(&fon[neoff + 0x24..]).try_into().map_err(no_op)?;
     let rtable_header = rtable_offset + neoff;
     let shift = from_word(&fon[rtable_header..]);
     let mut p = rtable_header + 2;
@@ -85,32 +86,43 @@ fn extract_ne_fonts(fon: &[u8], neoff: usize) -> Vec<Vec<RgbImage>> {
         println!("{} fonts found", count);
         p += 8; // skip type (2 bytes), the count we just read (2 bytes), and 4 reserved bytes
         for _ in [0..count] {
-            let start: usize = (from_word(&fon[p..]) << shift).try_into().unwrap();
-            let size: usize = (from_word(&fon[p + 2..]) << shift).try_into().unwrap();
+            let start: usize = (from_word(&fon[p..]) << shift).try_into().map_err(no_op)?;
+            let size: usize = (from_word(&fon[p + 2..]) << shift).try_into().map_err(no_op)?;
             if (start + size) as usize > fon.len() {
-                panic!("Resource overrun!");
+                return Err(String::from("Resource overrun!"));
             }
             if rtype == 0x8008 {
-                fonts.push(load_cp1252(&fon[start..start + size]));
+                match load_cp1252(&fon[start..start + size]) {
+                    Ok (f) => fonts.push(f),
+                    Err (e) => return Err(e)
+                }
             }
             p += 12 // start (2 bytes), size (2 bytes), flags, name/id, 4 bytes reserved
         }
     }
-    fonts
+    Ok(fonts)
 }
 
-pub fn load_fonts(fon: &[u8]) -> Vec<Vec<RgbImage>> {
+fn translate_error(e: TryFromIntError) -> String {
+    e.to_string()
+}
+
+fn no_op(e: Infallible) -> String {
+    String::from("")
+}
+
+pub fn load_fonts(fon: &[u8]) -> Result<Vec<Vec<RgbImage>>, String> {
     if [fon[0], fon[1]] != *b"MZ" {
-        panic!("Not a .FON format!");
+        Err(String::from("Not a .FON format!"))
     } else {
-        let neoff: usize = from_dword(&fon[0x3C..]).try_into().unwrap();
+        let neoff: usize = from_dword(&fon[0x3C..]).try_into().map_err(translate_error)?;
         if fon[neoff..(neoff + 2)] == *b"NE" {
             extract_ne_fonts(fon, neoff)
         } else if fon[neoff..(neoff + 4)] == *b"PE\0\0" {
             println!("PE!");
-            vec!()
+            Ok(vec!())
         } else {
-            panic!("Couldn't find an offset (NE or PE).");
+            Err(String::from("Couldn't find an offset (NE or PE)."))
         }
     }
 }
