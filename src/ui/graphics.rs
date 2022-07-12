@@ -78,7 +78,7 @@ impl GraphicsMode {
     }
 }
 
-// TODO: Tilesets and fonts need to resolve to the same thing - the renderer shouldn't care, it should be able to follow a map of attr/char pairs to a source coord and blend/shade setting
+/// Any Font (ttf) can be a Tileset but Tilesets cannot become Fonts
 pub struct GraphicsModeService {
     pub graphics_modes: Vec<GraphicsMode>,
     pub current_graphics_mode: Option<usize>,

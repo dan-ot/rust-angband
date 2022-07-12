@@ -11,7 +11,8 @@ use nalgebra_glm as glm;
 // use crate::ui::FontAtlas;
 use crate::glad_gl::gl;
 use crate::ui::graphics::GraphicsModeService;
-use crate::ui::cp437::Cp437;
+use crate::ui::tileset::Tileset;
+use crate::ui::chars::Charmap;
 use crate::random::Random;
 
 pub mod shader;
@@ -23,7 +24,8 @@ pub mod camera;
 pub struct Engine {
     pub gl: glwrap::Gl,
     pub graphics_modes: GraphicsModeService,
-    pub font: Cp437
+    pub tiles: Tileset,
+    pub chars: Charmap
 }
 
 impl Engine {
@@ -38,7 +40,8 @@ impl Engine {
         Engine {
             gl: glwrap::Gl::new(),
             graphics_modes: graphics,
-            font: Cp437::from_cp1252(loaded_fonts.first().unwrap().to_vec(), 256)
+            tiles: Tileset::from_cp1252(loaded_fonts.first().unwrap().to_vec(), 256),
+            chars: Charmap::from_font(&face, 256.0)
         }
     }
 
@@ -175,7 +178,7 @@ impl Engine {
                     },
                     WindowEvent::Key(Key::Space, _, Action::Release, _) => {
                         println!("Grid swap!");
-                        let font = &self.font;
+                        let font = &self.tiles;
                         for row in grid.iter_mut() {
                             for entry in row.iter_mut() {
                                 entry.0 = font.random(&mut rng);
@@ -209,7 +212,7 @@ impl Engine {
                             shader.vector_parameter("fgColor", fg);
                             shader.vector_parameter("bgColor", bg);
             
-                            self.gl.activate_texture(self.font.char(*ch));
+                            self.gl.activate_texture(self.tiles.char(*ch));
                             self.gl.render_mesh(&floor_mesh);
                             drawn += 1;
                     }
