@@ -110,6 +110,7 @@ impl Engine {
         ];
         let cube_mesh = vertices::MeshKit::new(&cube_vertex_data, &cube_indices);
 
+        let line_of_text = self.chars.line("text!");
         let (w, h) = self.gl.window_size();
         
         let identity = glm::identity::<f32, 4>();
@@ -214,6 +215,9 @@ impl Engine {
             
                             self.gl.activate_texture(self.tiles.char(*ch));
                             self.gl.render_mesh(&floor_mesh);
+
+                            self.gl.activate_texture(line_of_text.texture);
+                            self.gl.render_mesh(&line_of_text.renderable);
                             drawn += 1;
                     }
                 }
