@@ -1,6 +1,5 @@
 use std::collections::HashMap;
 use std::convert::TryInto;
-use std::iter::zip;
 
 use image::{Rgb, RgbImage};
 use nalgebra_glm::{vec2, vec3, vec4, TVec2, TVec3, TVec4};
@@ -44,7 +43,7 @@ pub struct Line<'a> {
 ///    and their relative position in 3D space.
 /// 4. Lay them out correctly by jumping one advance over for the next character, 
 ///    and one unit down for the next line
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Copy, Debug, Default)]
 pub struct RenderedDimensions {
     /// How many horizontal texels this will take up, for sprite packing
     pub rendered_width: u32,
@@ -126,7 +125,6 @@ impl Charmap {
             )
         });
 
-        let height_portion_ascent = face.v_metrics(rt_scale).ascent;
         let height_portion_descent = face.v_metrics(rt_scale).descent;
 
         let bounds = glyphs.clone()
@@ -180,10 +178,11 @@ impl Charmap {
                 (c, glyph, dimensions)
             });
 
-        let (rows, _, _) = bounds
-            .fold((&mut vec![], &mut vec![], 0_u32),
+        let mut rows = vec![];
+        let _ = bounds
+            .fold((&mut vec![], 0_u32),
                 |so_far, item| {
-                    let (rows, this_row, left_offset) = so_far;
+                    let (this_row, left_offset) = so_far;
                     let (c, glyph, dimensions) = item;
                     let potential_new_offset = left_offset + dimensions.rendered_width + 1;
                     
@@ -192,10 +191,10 @@ impl Charmap {
                         rows.push(this_row.clone());
                         this_row.clear();
                         this_row.push((c, glyph, dimensions, point(0_u32, 0_u32)));
-                        (rows, this_row, dimensions.rendered_width + 1)
+                        (this_row, dimensions.rendered_width + 1)
                     } else {
                         this_row.push((c, glyph, dimensions, point(left_offset, 0_u32)));
-                        (rows, this_row, potential_new_offset)
+                        (this_row, potential_new_offset)
                     }
                 } 
             );
@@ -204,13 +203,14 @@ impl Charmap {
             .iter()
             .map(|r| {r.last().map(|t| {t.3.x + t.2.rendered_width}).unwrap_or(0)})
             .max()
-            .unwrap_or(0);
+            .unwrap_or(0)
+            + 1;
 
-        let (positioned_rows, total_height) = rows
+        let mut positioned_rows = vec!();
+        let total_height = rows
             .iter()
-            .fold((&mut vec!(), 0_u32),
-                |so_far, row| {
-                    let (rows, offset) = so_far;
+            .fold(0_u32,
+                |offset, row| {
                     let tallest = row.iter()
                         .map(|tup| {
                             let (_, _, dimensions, _) = tup;
@@ -218,62 +218,64 @@ impl Charmap {
                         })
                         .max()
                         .unwrap_or(0);
-                    rows.push(
+                    positioned_rows.push(
                         row.iter()
                             .map(|tup| {
                                 let (c, glyph, dimensions, position) = tup;
-                                (c, glyph, dimensions, point(position.x, position.y + offset))
+                                (*c, glyph, *dimensions, point(position.x, position.y + offset))
                             })
                             .collect::<Vec<_>>()
                     );
-                    (rows, offset + tallest)
+                    offset + tallest
                 }
-            );
+            )
+            + 1;
 
         let mut rendered_packing = RgbImage::new(largest_total_width, total_height);
 
-        let coords = positioned_rows.iter()
-            .flatten()
-            .map(|tup| {
-                let (c, glyph, dimensions, position) = tup;
-                let positioned_glyph = glyph.positioned(point(0.0, 0.0));
-                let bounds = positioned_glyph.pixel_bounding_box().unwrap_or(Rect::default());
-                positioned_glyph.draw(
-                    |px, py, o| {
-                        let color = (o * (u8::MAX as f32)) as u8;
-                        // The actual pixel is the current pixel shifted to the left (to account
-                        // for the padding the bounding box already has, which we don't want) and
-                        // then positioned within the overall image
-
-                        // The doc for .draw() states they're already unpadded - iterating from 0
-                        // to width, not min.x to max.x
-                        let x = px + position.x;
-                        let y = py + position.y;
-                        rendered_packing.put_pixel(x, y, Rgb([color, color, color]));
-                    }
-                );
-
-                // The texel coordinates normalize the image's pixels into a 0.0 to 1.0 space
-                let texel = vec4(
-                    (position.x as f32) / (largest_total_width as f32),
-                    (position.y as f32) / (total_height as f32),
-                    (position.x + bounds.width() as u32) as f32 / (largest_total_width as f32),
-                    (position.y + bounds.height() as u32) as f32 / (total_height as f32)
-                );
-
-                map.insert(
-                    **c,
-                    Character {
-                        texels: texel,
-                        quad: vec4(
-                            dimensions.left_edge,
-                            dimensions.top_edge,
-                            dimensions.right_edge,
-                            dimensions.bottom_edge
-                        ),
-                        advance: dimensions.advance
-                    }
-                )
+        positioned_rows.iter()
+            .for_each(|row| {
+                row.iter().for_each(|tup| {
+                    let (c, glyph, dimensions, position) = *tup;
+                    let positioned_glyph = glyph.clone().positioned(point(0.0, 0.0));
+                    let bounds = positioned_glyph.pixel_bounding_box().unwrap_or(Rect::default());
+                    positioned_glyph.draw(
+                        |px, py, o| {
+                            let color = (o * (u8::MAX as f32)) as u8;
+                            // The actual pixel is the current pixel shifted to the left (to account
+                            // for the padding the bounding box already has, which we don't want) and
+                            // then positioned within the overall image
+        
+                            // The doc for .draw() states they're already unpadded - iterating from 0
+                            // to width, not min.x to max.x
+                            let x = px + position.x;
+                            let y = py + position.y;
+                            rendered_packing.put_pixel(x, y, Rgb([color, color, color]));
+                        }
+                    );
+        
+                    // The texel coordinates normalize the image's pixels into a 0.0 to 1.0 space
+                    let texel = vec4(
+                        (position.x as f32) / (largest_total_width as f32),
+                        (position.y as f32) / (total_height as f32),
+                        (position.x + bounds.width() as u32) as f32 / (largest_total_width as f32),
+                        (position.y + bounds.height() as u32) as f32 / (total_height as f32)
+                    );
+        
+                    map.insert(
+                        c,
+                        Character {
+                            texels: texel,
+                            quad: vec4(
+                                dimensions.left_edge,
+                                dimensions.top_edge,
+                                dimensions.right_edge,
+                                dimensions.bottom_edge
+                            ),
+                            advance: dimensions.advance
+                        }
+                    );
+                });
             });
         // Calculate the relative rectangles in texels
         // let mut l_off: u32 = 0;
