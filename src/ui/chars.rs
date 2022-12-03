@@ -12,11 +12,12 @@ use crate::engine::{texture::Texture, vertices::MeshKit};
 /// CP437 are being left out.
 pub struct Charmap {
     /// The OpenGL texture containing the rendered characters
-    atlas: Texture,
+    pub atlas: Texture,
     /// A map of displayable character to coordinate and font details
     map: HashMap<char, Character>,
 }
 
+#[derive(Debug)]
 pub struct Character {
     /// Position within the containing atlas - left, top, right, bottom
     texels: TVec4<f32>,
@@ -149,19 +150,22 @@ impl Charmap {
                         // character has.
 
                         let rendered_width = bb.width().round() as u32;
-                        let left_edge = rt_scale.x / bb.min.x;
-                        let right_edge = rt_scale.x / bb.max.x;
+                        let left_edge = bb.min.x / rt_scale.x;
+                        let right = bb.min.x + bb.width();
+                        let right_edge = right / rt_scale.x;
 
                         let rendered_height = bb.height().round() as u32;
                         // Top is usually negative - distance from baseline to the topmost pixel
                         // Distance from quad origin (bottom) = 
-                        let top = height_portion_descent - bb.min.y;
-                        let top_edge = rt_scale.y / top;
+                        // let top = height_portion_descent - bb.min.y;
+                        // let top_edge = top / rt_scale.y;
                         // Bottom is sometimes negative (" floats far above the baseline)
-                        let bottom = height_portion_descent - bb.max.y;
-                        let bottom_edge = rt_scale.y / bottom;
+                        let bottom = -height_portion_descent - bb.max.y;
+                        let top = bottom + bb.height();
+                        let bottom_edge = bottom / rt_scale.y;
+                        let top_edge = top / rt_scale.y;
 
-                        let advance = rt_scale.x / glyph.h_metrics().advance_width;
+                        let advance = glyph.h_metrics().advance_width / rt_scale.x;
                         
                         RenderedDimensions {
                             rendered_width,
@@ -174,7 +178,16 @@ impl Charmap {
                             bottom_edge
                         }
                     })
-                    .unwrap_or(RenderedDimensions::default());
+                    .unwrap_or(RenderedDimensions {
+                        rendered_width: 0,
+                        left_edge: 0.0,
+                        right_edge: 0.0,
+                        advance: glyph.h_metrics().advance_width,
+
+                        rendered_height: 0,
+                        top_edge: 0.0,
+                        bottom_edge: 0.0
+                    });
                 (c, glyph, dimensions)
             });
 
@@ -184,14 +197,21 @@ impl Charmap {
                 |so_far, item| {
                     let (this_row, left_offset) = so_far;
                     let (c, glyph, dimensions) = item;
-                    let potential_new_offset = left_offset + dimensions.rendered_width + 1;
+                    let char_offset = if dimensions.rendered_width == 0 {
+                        // If we didn't draw anything, no need to offset that last pixel
+                        0
+                    } else {
+                        // If we drew something, need to move a pixel over so we don't overlap
+                        dimensions.rendered_width + 1
+                    };
+                    let potential_new_offset = left_offset + char_offset;
                     
                     if potential_new_offset > max_width {
-                        println!("Line break at [{}] - got to {} width", c, left_offset);
+                        // println!("Line break at [{}] - got to {} width", c, left_offset);
                         rows.push(this_row.clone());
                         this_row.clear();
                         this_row.push((c, glyph, dimensions, point(0_u32, 0_u32)));
-                        (this_row, dimensions.rendered_width + 1)
+                        (this_row, char_offset)
                     } else {
                         this_row.push((c, glyph, dimensions, point(left_offset, 0_u32)));
                         (this_row, potential_new_offset)
@@ -262,99 +282,24 @@ impl Charmap {
                         (position.y + bounds.height() as u32) as f32 / (total_height as f32)
                     );
         
+                    let result = Character {
+                        texels: texel,
+                        quad: vec4(
+                            dimensions.left_edge,
+                            dimensions.top_edge,
+                            dimensions.right_edge,
+                            dimensions.bottom_edge
+                        ),
+                        advance: dimensions.advance
+                    };
+
+                    // println!("{} -> {:?}", c, result);
                     map.insert(
                         c,
-                        Character {
-                            texels: texel,
-                            quad: vec4(
-                                dimensions.left_edge,
-                                dimensions.top_edge,
-                                dimensions.right_edge,
-                                dimensions.bottom_edge
-                            ),
-                            advance: dimensions.advance
-                        }
+                        result
                     );
                 });
             });
-        // Calculate the relative rectangles in texels
-        // let mut l_off: u32 = 0;
-        // let mut max_loff: u32 = 0;
-        // let mut t_off: u32 = 0;
-        // let in_texels = glyphs
-        //     .clone()
-        //     .map(|tup| {
-        //         let (c, glyph) = tup;
-        //         glyph.positioned(point(0.0,0.0)).pixel_bounding_box().map(|bb| {
-        //             // Get this glyph's size
-        //             let glyph_width: u32 = bb.width().try_into().unwrap();
-        //             let glyph_height: u32 = bb.height().try_into().unwrap();
-                    
-        //             let right = l_off + glyph_width;
-        //             let bottom = t_off + glyph_height;
-        //             // Mutability is obfuscating the result - but anyway...
-        //             // Check for row wrap
-        //             if right + 1 >= max_width.try_into().unwrap() {
-        //                 l_off = 0;
-        //                 t_off = bottom;
-        //             } else {
-        //                 l_off = right + 1;
-        //                 max_loff = std::cmp::max(right, max_loff);
-        //             }
-
-        //             // Capture the bounds
-        //             let result = vec4(l_off, t_off, l_off + glyph_width, t_off + glyph_height);
-
-        //             // println!("[{}] is ({} x {}) and is at {:?}", c, glyph_width, glyph_height, result);
-        //             result
-        //         })
-        //     })
-        //     .collect::<Vec<_>>();
-
-        // let (tx, ty) = ((max_loff + 1) as f32, (t_off + 1) as f32);
-
-        // // Because of mutability, l_off and t_off also include the width and height of the last character
-        // let mut image = RgbImage::new(max_width.try_into().unwrap(), t_off + 1);
-
-        // for combo in zip(in_texels, glyphs) {
-        //     let (possible_txls, (ch, gl)) = combo;
-        //     let advance = gl.h_metrics().advance_width;
-        //     let bounds = match gl.exact_bounding_box() {
-        //         Some(ebb) => vec4(ebb.min.x, ebb.min.y, ebb.max.x, ebb.max.y),
-        //         None => vec4(0.0, 0.0, 0.0, 0.0),
-        //     };
-
-        //     match possible_txls {
-        //         Some(txl) => {
-        //             // println!("Texels for [{}] are [{:?}].", ch, txl);
-        //             gl.positioned(point(0.0, 0.0)).draw(|px, py, a| {
-        //                 let color = (a * (u8::MAX as f32)) as u8;
-        //                 println!("Drawing {} at {}, {}", color, px, py);
-        //                 image.put_pixel(txl.x + px, txl.y + py, Rgb([color, color, color]));
-        //             });
-        //             let c = Character {
-        //                 texels: vec4(
-        //                     txl.x as f32 / tx,
-        //                     txl.y as f32 / ty,
-        //                     txl.z as f32 / tx,
-        //                     txl.w as f32 / ty,
-        //                 ),
-        //                 quad: bounds,
-        //                 advance,
-        //             };
-        //             map.insert(ch, c);
-        //         }
-        //         None => {
-        //             // println!("No texels for [{}].", ch);
-        //             let c = Character {
-        //                 texels: vec4(0.0, 0.0, 1.0 / tx, 1.0 / ty),
-        //                 quad: bounds,
-        //                 advance,
-        //             };
-        //             map.insert(ch, c);
-        //         }
-        //     };
-        // }
         Charmap {
             atlas: Texture::from_image(&rendered_packing),
             map,
@@ -368,33 +313,36 @@ impl Charmap {
             .enumerate()
             .scan(0_f32, |offset, (index, ch)| {
                 let char_def = self.map.get(&ch).unwrap_or(self.map.get(&'?').unwrap());
+                // We swap our y coords here - OpenGL stores textures with 0 = bottom, and our calculations
+                // have been 0 = top
                 let coords = vec![
                     (
-                        vec3(char_def.quad.z + *offset, 0.0, char_def.quad.y),
-                        vec2(char_def.texels.z, char_def.texels.y),
+                        vec3(char_def.quad.x + *offset, 0.0, char_def.quad.w),
+                        vec2(char_def.texels.x, char_def.texels.y),
                     ),
                     (
                         vec3(char_def.quad.z + *offset, 0.0, char_def.quad.w),
-                        vec2(char_def.texels.z, char_def.texels.w),
-                    ),
-                    (
-                        vec3(char_def.quad.x + *offset, 0.0, char_def.quad.w),
-                        vec2(char_def.texels.x, char_def.texels.w),
+                        vec2(char_def.texels.z, char_def.texels.y),
                     ),
                     (
                         vec3(char_def.quad.x + *offset, 0.0, char_def.quad.y),
-                        vec2(char_def.texels.x, char_def.texels.y),
+                        vec2(char_def.texels.x, char_def.texels.w),
+                    ),
+                    (
+                        vec3(char_def.quad.z + *offset, 0.0, char_def.quad.y),
+                        vec2(char_def.texels.z, char_def.texels.w),
                     ),
                 ];
-                *offset = char_def.quad.z + char_def.advance;
+                *offset = *offset + char_def.advance;
                 let my_indices = vec![
-                    1 + (6 * index) as u32,
+                    0 + (6 * index) as u32,
                     2 + (6 * index) as u32,
                     3 + (6 * index) as u32,
                     0 + (6 * index) as u32,
-                    1 + (6 * index) as u32,
-                    3 + (6 * index) as u32
+                    3 + (6 * index) as u32,
+                    1 + (6 * index) as u32
                 ];
+                println!("{} at {:?}", ch, coords.iter().map(|coord| {coord.0}).collect::<Vec<_>>());
                 Some((coords, my_indices))
             });
             // .flatten();
@@ -402,11 +350,12 @@ impl Charmap {
             .clone()
             .map(|tup| {tup.0})
             .flatten()
-            .collect::<Vec<(TVec3<f32>, TVec2<f32>)>>();
+            .collect::<Vec<_>>();
             //.collect::<(Vec<(TVec3<f32>, TVec2<f32>)>, [usize; 6])>();
-        let indices: Vec<u32> = data.map(|tup| {tup.1})
+        let indices = data
+            .map(|tup| {tup.1})
             .flatten()
-            .collect();
+            .collect::<Vec<_>>();
         Line {
             texture: &self.atlas,
             renderable: MeshKit::new(&vec, &indices),

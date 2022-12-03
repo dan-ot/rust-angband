@@ -9,7 +9,8 @@ use image;
 use crate::glad_gl::gl;
 
 pub struct Texture {
-    pub handle: u32
+    pub handle: u32,
+    pub size: (u32, u32)
 }
 
 fn interpret_color_type(source: ColorType) -> (i32, u32) {
@@ -56,7 +57,7 @@ impl Texture {
         }
 
         Texture {
-            handle: tex
+            handle: tex, size: (pic.width(), pic.height())
         }
     }
 
@@ -141,7 +142,7 @@ impl Texture {
         }
 
         Texture {
-            handle: tex
+            handle: tex, size: (img.width(), img.height())
         }
     }
 }
