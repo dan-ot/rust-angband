@@ -335,12 +335,12 @@ impl Charmap {
                 ];
                 *offset = *offset + char_def.advance;
                 let my_indices = vec![
-                    0 + (6 * index) as u32,
-                    2 + (6 * index) as u32,
-                    3 + (6 * index) as u32,
-                    0 + (6 * index) as u32,
-                    3 + (6 * index) as u32,
-                    1 + (6 * index) as u32
+                    0 + (4 * index) as u32,
+                    2 + (4 * index) as u32,
+                    3 + (4 * index) as u32,
+                    0 + (4 * index) as u32,
+                    3 + (4 * index) as u32,
+                    1 + (4 * index) as u32
                 ];
                 println!("{} at {:?}", ch, coords.iter().map(|coord| {coord.0}).collect::<Vec<_>>());
                 Some((coords, my_indices))
