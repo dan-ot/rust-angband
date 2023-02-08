@@ -58,7 +58,7 @@ impl Engine {
         // let standing_mesh = vertices::MeshKit::quad_standing(glm::vec2(0.5, -0.5), glm::vec2(-0.5, 0.5));
         // let cube_mesh = vertices::MeshKit::boxy(glm::vec2(-0.5, 0.5), glm::vec2(-0.5, 0.5), glm::vec2(-0.5, 0.5));
 
-        let line_of_text = self.chars.line("lorem ipsum");
+        let line_of_text = self.chars.line("any performance impacts when we go for a much longer line of text?");
         let (w, h) = self.gl.window_size();
         
         let identity = glm::identity::<f32, 4>();
@@ -172,7 +172,7 @@ impl Engine {
             shader.matrix_parameter("projection", &ortho);
 
             shader.vector_parameter("fgColor", &colors.angband_color_table[&Colors::White]);
-            shader.vector_parameter("bgColor", &colors.angband_color_table[&Colors::Blue]);
+            shader.vector_parameter("bgColor", &colors.angband_color_table[&Colors::Dark]);
 
             self.gl.activate_texture(line_of_text.texture);
             self.gl.render_mesh(&line_of_text.renderable);

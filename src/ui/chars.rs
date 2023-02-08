@@ -317,19 +317,19 @@ impl Charmap {
                 // have been 0 = top
                 let coords = vec![
                     (
-                        vec3(char_def.quad.x + *offset, 0.0, char_def.quad.w),
+                        vec3(char_def.quad.x + *offset, 0.0, 1.0 - char_def.quad.y),
                         vec2(char_def.texels.x, char_def.texels.y),
                     ),
                     (
-                        vec3(char_def.quad.z + *offset, 0.0, char_def.quad.w),
+                        vec3(char_def.quad.z + *offset, 0.0, 1.0 - char_def.quad.y),
                         vec2(char_def.texels.z, char_def.texels.y),
                     ),
                     (
-                        vec3(char_def.quad.x + *offset, 0.0, char_def.quad.y),
+                        vec3(char_def.quad.x + *offset, 0.0, 1.0 - char_def.quad.w),
                         vec2(char_def.texels.x, char_def.texels.w),
                     ),
                     (
-                        vec3(char_def.quad.z + *offset, 0.0, char_def.quad.y),
+                        vec3(char_def.quad.z + *offset, 0.0, 1.0 - char_def.quad.w),
                         vec2(char_def.texels.z, char_def.texels.w),
                     ),
                 ];
