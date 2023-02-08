@@ -58,7 +58,7 @@ impl Engine {
         // let standing_mesh = vertices::MeshKit::quad_standing(glm::vec2(0.5, -0.5), glm::vec2(-0.5, 0.5));
         // let cube_mesh = vertices::MeshKit::boxy(glm::vec2(-0.5, 0.5), glm::vec2(-0.5, 0.5), glm::vec2(-0.5, 0.5));
 
-        let line_of_text = self.chars.line("tttt!");
+        let line_of_text = self.chars.line("lorem ipsum");
         let (w, h) = self.gl.window_size();
         
         let identity = glm::identity::<f32, 4>();
@@ -70,7 +70,7 @@ impl Engine {
         let mut rng = Random::new();
         let mut grid = vec![vec![('e', colors.angband_color_table[&crate::colors::Colors::White], colors.angband_color_table[&crate::colors::Colors::Dark]); grid_width]; grid_height];
 
-        let mut camera = camera::Camera::offset(0.0, 10.0, 0.0, 0.0, -1.0, -0.01);
+        let mut camera = camera::Camera::offset(0.0, 20.0, 0.0, 0.0, -1.0, -0.01);
 
         let zoom = 40.0;
         let (size_x, size_y) = (w / zoom + 1.0, h / zoom + 1.0);

@@ -182,7 +182,7 @@ impl Charmap {
                         rendered_width: 0,
                         left_edge: 0.0,
                         right_edge: 0.0,
-                        advance: glyph.h_metrics().advance_width,
+                        advance: glyph.h_metrics().advance_width / rt_scale.x,
 
                         rendered_height: 0,
                         top_edge: 0.0,
