@@ -111,7 +111,6 @@ impl Charmap {
 
         // This is a demand of the type rendering system - it has to be scaled to be rendered
         let rt_scale = Scale { x: scale, y: scale };
-        println!("Scale is set to {}", scale);
 
         // We decide to aim for 8 times the scale in width. A bit arbitrary.
         let max_width = (scale * 8.0).floor() as u32;
@@ -202,7 +201,7 @@ impl Charmap {
                         0
                     } else {
                         // If we drew something, need to move a pixel over so we don't overlap
-                        dimensions.rendered_width + 1
+                        dimensions.rendered_width
                     };
                     let potential_new_offset = left_offset + char_offset;
                     
@@ -211,10 +210,10 @@ impl Charmap {
                         rows.push(this_row.clone());
                         this_row.clear();
                         this_row.push((c, glyph, dimensions, point(0_u32, 0_u32)));
-                        (this_row, char_offset)
+                        (this_row, char_offset + 1)
                     } else {
                         this_row.push((c, glyph, dimensions, point(left_offset, 0_u32)));
-                        (this_row, potential_new_offset)
+                        (this_row, potential_new_offset + 1)
                     }
                 } 
             );
@@ -293,7 +292,6 @@ impl Charmap {
                         advance: dimensions.advance
                     };
 
-                    // println!("{} -> {:?}", c, result);
                     map.insert(
                         c,
                         result
@@ -342,7 +340,6 @@ impl Charmap {
                     3 + (4 * index) as u32,
                     1 + (4 * index) as u32
                 ];
-                println!("{} at {:?}", ch, coords.iter().map(|coord| {coord.0}).collect::<Vec<_>>());
                 Some((coords, my_indices))
             });
             // .flatten();
