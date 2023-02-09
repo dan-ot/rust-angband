@@ -126,6 +126,24 @@ impl Shader {
         }
     }
 
+    pub fn float_parameter(&mut self, name: &str, value: f32) {
+        match self.parameters.get(name) {
+            Some (known) => {
+                unsafe {
+                    gl::Uniform1f(*known, value);
+                }
+            },
+            None => {
+                unsafe {
+                    let n = CString::new(name).unwrap();
+                    let loc = gl::GetUniformLocation(self.id, n.as_ptr());
+                    self.parameters.insert(String::from(name), loc);
+                    gl::Uniform1f(loc, value);
+                }
+            }
+        }
+    }
+
     pub fn activate(&self) {
         unsafe {
             gl::UseProgram(self.id);

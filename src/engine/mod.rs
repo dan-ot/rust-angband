@@ -47,16 +47,22 @@ impl Engine {
     }
 
     pub fn run(&mut self) {
-        let mut shader = shader::Shader::new(
-            Path::new("resources/shaders/vertex_default.glsl"),
-            Path::new("resources/shaders/fragment_default.glsl"),
+        let mut playfield_shader = shader::Shader::new(
+            Path::new("resources/shaders/vertex_word.glsl"),
+            Path::new("resources/shaders/fragment_world.glsl"),
         )
         .unwrap();
 
-        let floor_mesh = vertices::MeshKit::quad_flat(0.5, -0.5, -0.5, 0.5);
+        let mut text_shader = shader::Shader::new(
+            Path::new("resources/shaders/vertex_text.glsl"),
+            Path::new("resources/shaders/fragment_text.glsl")
+        )
+        .unwrap();
+
+        // let floor_mesh = vertices::MeshKit::quad_flat(0.5, -0.5, -0.5, 0.5);
         // let charmap_mesh = vertices::MeshKit::quad_flat(glm::vec2(0.0, 0.0), glm::vec2(self.chars.atlas.size.0 as f32 / 60.0, self.chars.atlas.size.1 as f32 / 60.0));
         // let standing_mesh = vertices::MeshKit::quad_standing(glm::vec2(0.5, -0.5), glm::vec2(-0.5, 0.5));
-        // let cube_mesh = vertices::MeshKit::boxy(glm::vec2(-0.5, 0.5), glm::vec2(-0.5, 0.5), glm::vec2(-0.5, 0.5));
+        let floor_mesh = vertices::MeshKit::boxy(glm::vec2(-0.5, 0.5), glm::vec2(-0.5, 0.5), glm::vec2(-0.5, 0.5));
 
         let line_of_text = self.chars.line("any performance impacts when we go for a much longer line of text?");
         let (w, h) = self.gl.window_size();
@@ -143,7 +149,7 @@ impl Engine {
             }
 
             self.gl.clear_color(0.2, 0.3, 0.3, 1.0);
-            shader.activate();
+            playfield_shader.activate();
 
             // let mut drawn = 0;
             for (y, r) in grid.iter().enumerate() {
@@ -152,12 +158,13 @@ impl Engine {
                         && (x as f32) < camera.position.x + size_x && (x as f32) > camera.position.x - size_x {
                             let model = glm::translate(&identity, &glm::vec3(x as f32, 0.0, y as f32));
             
-                            shader.matrix_parameter("model", &model);
-                            shader.matrix_parameter("view", &camera.view);
-                            shader.matrix_parameter("projection", &perspective);
+                            playfield_shader.matrix_parameter("model", &model);
+                            playfield_shader.matrix_parameter("view", &camera.view);
+                            playfield_shader.matrix_parameter("projection", &perspective);
         
-                            shader.vector_parameter("fgColor", fg);
-                            shader.vector_parameter("bgColor", bg);
+                            playfield_shader.vector_parameter("fgColor", fg);
+                            playfield_shader.vector_parameter("bgColor", bg);
+                            playfield_shader.float_parameter("light", rng.damroll(1, 4) as f32);
             
                             self.gl.activate_texture(self.tiles.char(*ch));
                             self.gl.render_mesh(&floor_mesh);
@@ -167,26 +174,16 @@ impl Engine {
             }
 
             let text_model = glm::translate(&identity, &glm::vec3(10.0, 0.0, -10.0));
-            shader.matrix_parameter("model", &text_model);
-            shader.matrix_parameter("view", &camera.view);
-            shader.matrix_parameter("projection", &ortho);
+            text_shader.activate();
+            text_shader.matrix_parameter("model", &text_model);
+            text_shader.matrix_parameter("view", &camera.view);
+            text_shader.matrix_parameter("projection", &ortho);
 
-            shader.vector_parameter("fgColor", &colors.angband_color_table[&Colors::White]);
-            shader.vector_parameter("bgColor", &colors.angband_color_table[&Colors::Dark]);
+            text_shader.vector_parameter("fgColor", &colors.angband_color_table[&Colors::White]);
 
             self.gl.activate_texture(line_of_text.texture);
             self.gl.render_mesh(&line_of_text.renderable);
 
-            // let font_model = glm::translate(&identity, &glm::vec3(15.0, 0.0, 15.0));
-            // shader.matrix_parameter("model", &font_model);
-            // shader.matrix_parameter("view", &camera.view);
-            // shader.matrix_parameter("projection", &ortho);
-
-            // shader.vector_parameter("fgColor", &colors.angband_color_table[&Colors::Red]);
-            // shader.vector_parameter("bgColor", &colors.angband_color_table[&Colors::Dark]);
-
-            // self.gl.activate_texture(&self.chars.atlas);
-            // self.gl.render_mesh(&charmap_mesh);
             self.gl.swap();
             // frame_count += 1;
             // if frame_count % 5 == 0 {
