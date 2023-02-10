@@ -12,6 +12,7 @@ pub mod graphics;
 pub mod tileset;
 pub mod chars;
 pub mod fon;
+pub mod panel;
 
 // TODO: in the source, these are a linked list...
 pub struct TerminalWindow {

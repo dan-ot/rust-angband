@@ -13,5 +13,5 @@ void main()
     // As a black-to-white bitmap, the value of any color channel is the value of all of them...
     float intensity = texture(ourTexture, texCoord).r;
 
-    FragColor = mix(vec4(bgColor, 1.0), vec4(fgColor, 1.0), intensity) * light;
+    FragColor = mix(vec4(bgColor, 1.0), vec4(fgColor, 1.0), intensity) * (light / 4.0);
 }
