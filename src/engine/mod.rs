@@ -49,7 +49,7 @@ impl Engine {
     pub fn run(&mut self) {
         let mut playfield_shader = shader::Shader::new(
             Path::new("resources/shaders/vertex_world.glsl"),
-            Path::new("resources/shaders/fragment_world.glsl"),
+            Path::new("resources/shaders/fragment_memory.glsl"),
         )
         .unwrap();
 
@@ -154,6 +154,7 @@ impl Engine {
             // let mut drawn = 0;
             for (y, r) in grid.iter().enumerate() {
                 for (x, (ch, fg, bg)) in r.iter().enumerate() {
+                    let light = ((x + y) % 4) as f32;
                     if (y as f32) < camera.position.z + size_y && (y as f32) > camera.position.z - size_y
                         && (x as f32) < camera.position.x + size_x && (x as f32) > camera.position.x - size_x {
                             let model = glm::translate(&identity, &glm::vec3(x as f32, 0.0, y as f32));
@@ -162,9 +163,9 @@ impl Engine {
                             playfield_shader.matrix_parameter("view", &camera.view);
                             playfield_shader.matrix_parameter("projection", &perspective);
         
-                            playfield_shader.vector_parameter("fgColor", fg);
-                            playfield_shader.vector_parameter("bgColor", bg);
-                            playfield_shader.float_parameter("light", (rng.damroll(1, 5) - 1) as f32);
+                            // playfield_shader.vector_parameter("fgColor", fg);
+                            // playfield_shader.vector_parameter("bgColor", bg);
+                            // playfield_shader.float_parameter("light", light);
             
                             self.gl.activate_texture(self.tiles.char(*ch));
                             self.gl.render_mesh(&floor_mesh);
