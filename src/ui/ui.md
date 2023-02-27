@@ -5,20 +5,47 @@ The UI needs to handle three basic cases - Panels, Widgets, and Dialogs.
 Panels are the HUD - they remain visible during play and overlay the playfield/camera. Their focus interacts with the game commands system - the player might be issuing in-game commands or Panel interactions at any given moment, and many Panel commands are equivalent to in-game commands. As part of that interaction, Panels might be moved, resized, called, or dismissed, and their arrangement is remembered and reactive across screens. That being said, Panels are still a UX-layer domain - they do not understand the game systems or game data they express, so it is up to some other conversion mechanism to correctly express game data as Panel content. Panels should be rendered after the playfield and Widgets: on top of everything else.
 
 Layout owns content
-    - Tree content
-        - child-pointing nodes
-        - Expanded/collapsed state
+
+- Tree content
+    - Child-pointing nodes
+    - Expanded/collapsed state
+    - Ordering/filtering
+    - Detail/expanded node
+    - Color + decoration + icon
+    - Action(s) for each item
+        - Command to be sent
+- Table content
+    - Column definitions
         - Ordering/filtering
-        - Detail/expanded node
-        - Color + decoration + icon
-        - Action(s) for each item
-            - Command to be sent
-    - Table content
-        - Header, content rows
-            - Column definition
-            - 
-        - Ordering/filtering
-        - Lines, alternating background
+    - Header, content rows
+        - Color/decoration per row
+        - Detail per row
+        - Detail/summary state per row
+        - Actions per row
+        - Selection state
+        - If ations, details, selection, or scolling, table can take focus
+    - Lines, alternating background
+    - Grouped row sets?
+    - Multi-select?
+    - Actions per table
+        - May act on selection
+- Card Content
+    - Title
+    - Sections
+        - Header
+        - Tabbed/Table
+        - Text
+        - Action Set (for menuing)
+            - Can take focus if at least one Action Set is defined
+            - Focus/command per Action in Action set
+        - Media?
+        - Layout -> Content (Bootstrap-style grid)?
+        - Shortcodes for color changes
+        - Scrollable: leaves Title and Card Actions visible always
+            - Can take focus if scrollable
+            - Auto-scroll? Coordinated with narration?
+    - Card Actions
+
 Panel resolves Layout to primitives
 PanelManager transforms primitives and passes to OpenGL, if the referred Panel is active
     - PanelManager stores base coords and sizes for each Panel (saves them on pause, restores them on resume)
