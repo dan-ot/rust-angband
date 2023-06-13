@@ -1,6 +1,13 @@
 # Basic Types
 The UI needs to handle three basic cases - Panels, Widgets, and Dialogs.
 
+Re-think:
+
+## Navigation Manager
+The root of UX is the Navigation Manager. It tracks the navigation stack (the history of screens the player has progressed through) and handles navigation requests (such as Next Screen, Back, and Pop-Up).
+
+The main thing it's tracking are Modes. There is a Root or Default Mode, which is likely the main menu screen. There should always be a button which navigates directly to this Mode. There is also one other default Mode - the Playfield Mode, which renders the in-game content.
+
 ## Panels
 Panels are the HUD - they remain visible during play and overlay the playfield/camera. Their focus interacts with the game commands system - the player might be issuing in-game commands or Panel interactions at any given moment, and many Panel commands are equivalent to in-game commands. As part of that interaction, Panels might be moved, resized, called, or dismissed, and their arrangement is remembered and reactive across screens. That being said, Panels are still a UX-layer domain - they do not understand the game systems or game data they express, so it is up to some other conversion mechanism to correctly express game data as Panel content. Panels should be rendered after the playfield and Widgets: on top of everything else.
 

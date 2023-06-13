@@ -1,5 +1,6 @@
 use rusttype::Font;
 use std::ffi::CString;
+use std::rc::Rc;
 use glfw::{Action, Context, Glfw, Key, Modifiers, Window, WindowEvent, WindowHint, WindowMode};
 use std::convert::TryInto;
 use std::ffi::c_void;
@@ -8,7 +9,7 @@ use std::sync::mpsc::Receiver;
 
 use nalgebra_glm as glm;
 
-use crate::colors::Colors;
+use crate::colors::{Colors, ColorService};
 // use crate::ui::FontAtlas;
 // use crate::glad_gl::gl;
 use crate::ui::graphics::GraphicsModeService;
@@ -26,7 +27,8 @@ pub struct Engine {
     pub gl: glwrap::Gl,
     pub graphics_modes: GraphicsModeService,
     pub tiles: Tileset,
-    pub chars: Charmap
+    pub chars: Charmap,
+    pub colors: Rc<Box<ColorService>>
 }
 
 impl Engine {
@@ -37,12 +39,14 @@ impl Engine {
         let fon_content = std::fs::read(Path::new("resources/fonts/8x8x.fon")).unwrap();
 
         let loaded_fonts = crate::ui::fon::load_fonts(&fon_content).unwrap();
+        let colors = Rc::new(Box::new(crate::colors::ColorService::new()));
 
         Engine {
             gl: glwrap::Gl::new(),
             graphics_modes: graphics,
             tiles: Tileset::from_cp1252(loaded_fonts.first().unwrap().to_vec(), 256),
-            chars: Charmap::from_font(&face, 256.0)
+            chars: Charmap::from_font(&face, 256.0, colors.clone()),
+            colors
         }
     }
 
@@ -64,17 +68,15 @@ impl Engine {
         // let standing_mesh = vertices::MeshKit::quad_standing(glm::vec2(0.5, -0.5), glm::vec2(-0.5, 0.5));
         let floor_mesh = vertices::MeshKit::boxy(glm::vec2(-0.5, 0.5), glm::vec2(-0.5, 0.5), glm::vec2(-0.5, 0.5));
 
-        let line_of_text = self.chars.line("any performance impacts when we go for a much longer line of text?");
+        let line_of_text = self.chars.line("any performance impacts when we go for a much longer line of text?", &Colors::Blue);
         let (w, h) = self.gl.window_size();
         
         let identity = glm::identity::<f32, 4>();
 
         let (grid_width, grid_height) = (250, 250);
 
-        let colors = crate::colors::ColorService::new();
-
         let mut rng = Random::new();
-        let mut grid = vec![vec![('e', colors.angband_color_table[&crate::colors::Colors::White], colors.angband_color_table[&crate::colors::Colors::Dark]); grid_width]; grid_height];
+        let mut grid = vec![vec![('e', self.colors.angband_color_table[&crate::colors::Colors::White], self.colors.angband_color_table[&crate::colors::Colors::Dark]); grid_width]; grid_height];
 
         let mut camera = camera::Camera::offset(0.0, 20.0, 0.0, 0.0, -1.0, -0.01);
 
@@ -135,8 +137,8 @@ impl Engine {
                         for row in grid.iter_mut() {
                             for entry in row.iter_mut() {
                                 entry.0 = font.random(&mut rng);
-                                entry.1 = colors.angband_color_table[&colors.random(&mut rng)];
-                                entry.2 = colors.angband_color_table[&colors.random(&mut rng)];
+                                entry.1 = self.colors.angband_color_table[&self.colors.random(&mut rng)];
+                                entry.2 = self.colors.angband_color_table[&self.colors.random(&mut rng)];
                             }
                         }
                     }
@@ -179,8 +181,6 @@ impl Engine {
             text_shader.matrix_parameter("model", &text_model);
             text_shader.matrix_parameter("view", &camera.view);
             text_shader.matrix_parameter("projection", &ortho);
-
-            text_shader.vector_parameter("fgColor", &colors.angband_color_table[&Colors::White]);
 
             self.gl.activate_texture(line_of_text.texture);
             self.gl.render_mesh(&line_of_text.renderable);

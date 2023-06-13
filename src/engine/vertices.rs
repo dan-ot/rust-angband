@@ -88,6 +88,88 @@ impl MeshKit {
         }
     }
 
+    pub fn new_colored(vertices_with_data: &[(Vec3, Vec2, Vec3)], raw_indices: &[u32]) -> MeshKit {
+        let mut vao: u32 = 0;
+        let mut ebo: u32 = 0;
+        let mut vbo: u32 = 0;
+
+        let mut as_vec = Vec::<f32>::new();
+        let indices = Vec::from(raw_indices);
+
+        for (vert, tex, col) in vertices_with_data.iter() {
+            as_vec.extend([vert.x, vert.y, vert.z]);
+            as_vec.extend([tex.x, tex.y]);
+            as_vec.extend([col.x, col.y, col.z]);
+        }
+
+        let sf32 = size_of::<f32>();
+
+        unsafe {
+            gl::GenVertexArrays(1, &mut vao);
+            gl::BindVertexArray(vao);
+
+            gl::GenBuffers(1, &mut vbo);
+            gl::BindBuffer(gl::ARRAY_BUFFER, vbo);
+            gl::BufferData(
+                gl::ARRAY_BUFFER,
+                (as_vec.len() * sf32).try_into().unwrap(),
+                as_vec.as_ptr() as *const c_void,
+                gl::STATIC_DRAW,
+            );
+
+            gl::GenBuffers(1, &mut ebo);
+            gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, ebo);
+            gl::BufferData(
+                gl::ELEMENT_ARRAY_BUFFER,
+                (indices.len() * size_of::<u32>()).try_into().unwrap(),
+                indices.as_ptr() as *const c_void,
+                gl::STATIC_DRAW,
+            );
+
+            let info_per_vertex = 3 // for the vertex
+                + 2 // for the texel
+                + 3; // for the color
+            let row_size: i32 = (info_per_vertex * sf32).try_into().unwrap();
+
+            // In this case, we mean '0 cast to Any', not 'pointer to memory 0'
+            #[allow(clippy::zero_ptr)]
+            gl::VertexAttribPointer(0, 3, gl::FLOAT, gl::FALSE, row_size, 0 as *const c_void);
+            gl::EnableVertexAttribArray(0);
+
+            gl::VertexAttribPointer(
+                1,
+                2,
+                gl::FLOAT,
+                gl::FALSE,
+                row_size,
+                (3 * sf32) as *const c_void,
+            );
+            gl::EnableVertexAttribArray(1);
+            
+            gl::VertexAttribPointer(
+                2,
+                3,
+                gl::FLOAT,
+                gl::FALSE,
+                row_size,
+                (5 * sf32) as *const c_void,
+            );
+            gl::EnableVertexAttribArray(2);
+
+            // Bind to 0 means release/unfocus
+            gl::BindBuffer(gl::ARRAY_BUFFER, 0);
+        }
+
+        MeshKit {
+            vertex_control_handle: vao,
+            vertex_data_handle: vbo,
+            element_handle: ebo,
+            size: indices.len().try_into().unwrap(),
+            raw_data: as_vec,
+            indices,
+        }
+    }
+
     pub fn quad_flat(left: f32, top: f32, right: f32, bottom: f32) -> MeshKit {
         MeshKit::new(
             &[

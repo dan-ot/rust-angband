@@ -1,11 +1,12 @@
 use std::collections::HashMap;
-use std::convert::TryInto;
+use std::rc::Rc;
 
 use image::{Rgb, RgbImage};
-use nalgebra_glm::{vec2, vec3, vec4, TVec2, TVec3, TVec4};
+use nalgebra_glm::{vec2, vec3, vec4, TVec4};
 use rusttype::{point, Font, Scale, Rect};
 
 use crate::engine::{texture::Texture, vertices::MeshKit};
+use crate::colors::{Colors, ColorService};
 
 /// This is a screen-renderable font - a single texture atlas and a mapping of character-to-tex-coords
 /// to assist in rendering. The intent is for commonly-displayed characters (0x20 through 0xA5); the more fun corners of
@@ -15,6 +16,8 @@ pub struct Charmap {
     pub atlas: Texture,
     /// A map of displayable character to coordinate and font details
     map: HashMap<char, Character>,
+    /// The current color kit for coloring text
+    colors: Rc<Box<ColorService>>
 }
 
 #[derive(Debug)]
@@ -67,7 +70,7 @@ pub struct RenderedDimensions {
 }
 
 impl Charmap {
-    pub fn from_font(face: &Font, scale: f32) -> Self {
+    pub fn from_font(face: &Font, scale: f32, colors: Rc<Box<ColorService>>) -> Self {
         // OK, here's what we're trying to do...
 
         // Make room on a single texture for all the characters/symbols we need. In addition to getting
@@ -301,13 +304,14 @@ impl Charmap {
         Charmap {
             atlas: Texture::from_image(&rendered_packing),
             map,
+            colors
         }
     }
 
-    pub fn line(&self, text: &str) -> Line {
+    pub fn line(&self, text: &str, color: &Colors) -> Line {
+        let col = self.colors.angband_color_table.get(color).unwrap_or(&vec3(1.0, 1.0, 1.0)).clone();
         let data = text
             .chars()
-            .into_iter()
             .enumerate()
             .scan(0_f32, |offset, (index, ch)| {
                 let char_def = self.map.get(&ch).unwrap_or(self.map.get(&'?').unwrap());
@@ -317,18 +321,22 @@ impl Charmap {
                     (
                         vec3(char_def.quad.x + *offset, 0.0, 1.0 - char_def.quad.y),
                         vec2(char_def.texels.x, char_def.texels.y),
+                        col
                     ),
                     (
                         vec3(char_def.quad.z + *offset, 0.0, 1.0 - char_def.quad.y),
                         vec2(char_def.texels.z, char_def.texels.y),
+                        col
                     ),
                     (
                         vec3(char_def.quad.x + *offset, 0.0, 1.0 - char_def.quad.w),
                         vec2(char_def.texels.x, char_def.texels.w),
+                        col
                     ),
                     (
                         vec3(char_def.quad.z + *offset, 0.0, 1.0 - char_def.quad.w),
                         vec2(char_def.texels.z, char_def.texels.w),
+                        col
                     ),
                 ];
                 *offset = *offset + char_def.advance;
@@ -355,7 +363,7 @@ impl Charmap {
             .collect::<Vec<_>>();
         Line {
             texture: &self.atlas,
-            renderable: MeshKit::new(&vec, &indices),
+            renderable: MeshKit::new_colored(&vec, &indices),
         }
     }
 }
