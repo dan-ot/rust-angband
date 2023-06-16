@@ -13,7 +13,7 @@ use crate::colors::{Colors, ColorService};
 /// CP437 are being left out.
 pub struct Charmap {
     /// The OpenGL texture containing the rendered characters
-    pub atlas: Texture,
+    pub atlas: Rc<Box<Texture>>,
     /// A map of displayable character to coordinate and font details
     map: HashMap<char, Character>,
     /// The current color kit for coloring text
@@ -32,8 +32,8 @@ pub struct Character {
 }
 
 /// The origin of this line of text is left-justified on the baseline (not the bottom!)
-pub struct Line<'a> {
-    pub texture: &'a Texture,
+pub struct Line {
+    pub texture: Rc<Box<Texture>>,
     pub renderable: MeshKit,
 }
 
@@ -302,7 +302,7 @@ impl Charmap {
                 });
             });
         Charmap {
-            atlas: Texture::from_image(&rendered_packing),
+            atlas: Rc::new(Box::new(Texture::from_image(&rendered_packing))),
             map,
             colors
         }
@@ -362,7 +362,7 @@ impl Charmap {
             .flatten()
             .collect::<Vec<_>>();
         Line {
-            texture: &self.atlas,
+            texture: self.atlas.clone(),
             renderable: MeshKit::new_colored(&vec, &indices),
         }
     }

@@ -182,7 +182,7 @@ impl Engine {
             text_shader.matrix_parameter("view", &camera.view);
             text_shader.matrix_parameter("projection", &ortho);
 
-            self.gl.activate_texture(line_of_text.texture);
+            self.gl.activate_texture(line_of_text.texture.as_ref());
             self.gl.render_mesh(&line_of_text.renderable);
 
             self.gl.swap();
