@@ -107,7 +107,7 @@ fn translate_error(e: TryFromIntError) -> String {
     e.to_string()
 }
 
-fn no_op(e: Infallible) -> String {
+fn no_op(_e: Infallible) -> String {
     String::from("")
 }
 

@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use std::rc::Rc;
 
 use image::{Rgb, RgbImage};
-use nalgebra_glm::{vec2, vec3, vec4, TVec4};
+use nalgebra_glm::{vec2, vec3, vec4, TVec2, TVec3, TVec4};
 use rusttype::{point, Font, Scale, Rect};
 
 use crate::engine::{texture::Texture, vertices::MeshKit};
@@ -31,10 +31,21 @@ pub struct Character {
     advance: f32,
 }
 
+#[derive(Clone, Copy, Debug)]
+pub struct CharCoords {
+    pub pos: TVec3<f32>,
+    pub tex: TVec2<f32>
+}
+
+pub struct CharData {
+    pub coords: Vec<CharCoords>,
+    pub color: TVec3<f32>
+}
+
 /// The origin of this line of text is left-justified on the baseline (not the bottom!)
 pub struct Line {
     pub texture: Rc<Box<Texture>>,
-    pub renderable: MeshKit,
+    pub chars: Vec<CharData>,
 }
 
 /// Express the character coordinates into 3D space...
@@ -310,36 +321,63 @@ impl Charmap {
 
     pub fn line(&self, text: &str, color: &Colors) -> Line {
         let col = self.colors.angband_color_table.get(color).unwrap_or(&vec3(1.0, 1.0, 1.0)).clone();
+
         let data = text
             .chars()
-            .enumerate()
-            .scan(0_f32, |offset, (index, ch)| {
+            .scan(0_f32, |offset, ch| {
                 let char_def = self.map.get(&ch).unwrap_or(self.map.get(&'?').unwrap());
                 // We swap our y coords here - OpenGL stores textures with 0 = bottom, and our calculations
                 // have been 0 = top
-                let coords = vec![
-                    (
-                        vec3(char_def.quad.x + *offset, 0.0, 1.0 - char_def.quad.y),
-                        vec2(char_def.texels.x, char_def.texels.y),
-                        col
-                    ),
-                    (
-                        vec3(char_def.quad.z + *offset, 0.0, 1.0 - char_def.quad.y),
-                        vec2(char_def.texels.z, char_def.texels.y),
-                        col
-                    ),
-                    (
-                        vec3(char_def.quad.x + *offset, 0.0, 1.0 - char_def.quad.w),
-                        vec2(char_def.texels.x, char_def.texels.w),
-                        col
-                    ),
-                    (
-                        vec3(char_def.quad.z + *offset, 0.0, 1.0 - char_def.quad.w),
-                        vec2(char_def.texels.z, char_def.texels.w),
-                        col
-                    ),
+                let ch = vec![
+                    CharCoords {
+                        pos: vec3(char_def.quad.x + *offset, 0.0, 1.0 - char_def.quad.y),
+                        tex: vec2(char_def.texels.x, char_def.texels.y)
+                    },
+                    CharCoords {
+                        pos: vec3(char_def.quad.z + *offset, 0.0, 1.0 - char_def.quad.y),
+                        tex: vec2(char_def.texels.z, char_def.texels.y)
+                    },
+                    CharCoords {
+                        pos: vec3(char_def.quad.x + *offset, 0.0, 1.0 - char_def.quad.w),
+                        tex: vec2(char_def.texels.x, char_def.texels.w)
+                    },
+                    CharCoords {
+                        pos: vec3(char_def.quad.z + *offset, 0.0, 1.0 - char_def.quad.w),
+                        tex: vec2(char_def.texels.z, char_def.texels.w)
+                    },
                 ];
                 *offset = *offset + char_def.advance;
+                Some(CharData {
+                    color: col,
+                    coords: ch
+                })
+            })
+            .collect::<Vec<_>>();
+            
+        Line {
+            texture: self.atlas.clone(),
+            chars: data
+        }
+    }
+}
+
+impl Line {
+    pub fn renderable(&self) -> MeshKit {
+        let data = self.chars
+            .iter()
+            .enumerate()
+            .map(|(index, ch)| {
+                let color = ch.color.clone();
+                let coords = ch.coords
+                    .iter()
+                    .map(move |c| {
+                        (
+                            c.pos,
+                            c.tex,
+                            color
+                        )
+                    });
+
                 let my_indices = vec![
                     0 + (4 * index) as u32,
                     2 + (4 * index) as u32,
@@ -348,22 +386,17 @@ impl Charmap {
                     3 + (4 * index) as u32,
                     1 + (4 * index) as u32
                 ];
-                Some((coords, my_indices))
+                (coords, my_indices)
             });
-            // .flatten();
         let vec = data
             .clone()
             .map(|tup| {tup.0})
             .flatten()
             .collect::<Vec<_>>();
-            //.collect::<(Vec<(TVec3<f32>, TVec2<f32>)>, [usize; 6])>();
         let indices = data
             .map(|tup| {tup.1})
             .flatten()
             .collect::<Vec<_>>();
-        Line {
-            texture: self.atlas.clone(),
-            renderable: MeshKit::new_colored(&vec, &indices),
-        }
+        MeshKit::new_colored(&vec, &indices)
     }
 }
