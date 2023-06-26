@@ -183,7 +183,7 @@ impl Engine {
             text_shader.matrix_parameter("projection", &ortho);
 
             self.gl.activate_texture(line_of_text.texture.as_ref());
-            self.gl.render_mesh(&line_of_text.renderable());
+            self.gl.render_mesh(&line_of_text.to_renderable());
 
             self.gl.swap();
             // frame_count += 1;

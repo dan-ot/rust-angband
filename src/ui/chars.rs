@@ -43,9 +43,12 @@ pub struct CharData {
 }
 
 /// The origin of this line of text is left-justified on the baseline (not the bottom!)
-pub struct Line {
+pub struct CharSeq {
     pub texture: Rc<Box<Texture>>,
     pub chars: Vec<CharData>,
+    pub width: f32,
+    pub over_base: f32,
+    pub under_base: f32
 }
 
 /// Express the character coordinates into 3D space...
@@ -319,7 +322,7 @@ impl Charmap {
         }
     }
 
-    pub fn line(&self, text: &str, color: &Colors) -> Line {
+    pub fn line(&self, text: &str, color: &Colors) -> CharSeq {
         let col = self.colors.angband_color_table.get(color).unwrap_or(&vec3(1.0, 1.0, 1.0)).clone();
 
         let data = text
@@ -353,28 +356,45 @@ impl Charmap {
                 })
             })
             .collect::<Vec<_>>();
-            
-        Line {
+        
+        CharSeq {
             texture: self.atlas.clone(),
-            chars: data
+            chars: data,
+            width: data
+                .into_iter()
+                .map(|ch| {ch.coords.into_iter().map(|co| {co.pos.x}).reduce(f32::max).unwrap_or(0_f32)})
+                .reduce(f32::max).unwrap_or(0_f32),
+            under_base: data
+                .into_iter()
+                .map(|ch| {
+                    ch.coords.into_iter().map(|co| {co.pos.y})
+                })
+                .flatten()
+                .reduce(f32::min).unwrap_or(0_f32),
+            over_base: data
+                .into_iter()
+                .map(|ch| {ch.coords.into_iter().map(|co|{co.pos.y})})
+                .flatten()
+                .reduce(f32::max).unwrap_or(0_f32)
         }
     }
 }
 
-impl Line {
-    pub fn renderable(&self) -> MeshKit {
+impl CharSeq {
+
+    pub fn to_renderable(&self) -> MeshKit {
         let data = self.chars
             .iter()
             .enumerate()
             .map(|(index, ch)| {
-                let color = ch.color.clone();
+                // let color = ch.color.clone();
                 let coords = ch.coords
                     .iter()
                     .map(move |c| {
                         (
                             c.pos,
                             c.tex,
-                            color
+                            ch.color
                         )
                     });
 
@@ -398,5 +418,9 @@ impl Line {
             .flatten()
             .collect::<Vec<_>>();
         MeshKit::new_colored(&vec, &indices)
+    }
+
+    pub fn concat(&self, other: &CharSeq) -> CharSeq {
+        
     }
 }
