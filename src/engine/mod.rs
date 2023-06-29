@@ -68,7 +68,9 @@ impl Engine {
         // let standing_mesh = vertices::MeshKit::quad_standing(glm::vec2(0.5, -0.5), glm::vec2(-0.5, 0.5));
         let floor_mesh = vertices::MeshKit::boxy(glm::vec2(-0.5, 0.5), glm::vec2(-0.5, 0.5), glm::vec2(-0.5, 0.5));
 
-        let line_of_text = self.chars.line("any performance impacts when we go for a much longer line of text?", &Colors::Blue);
+        let line_of_text = self.chars.charseq("any performance impacts when we go for a much longer line of text?", &Colors::Blue)
+            .append_right(&self.chars.charseq("None that I know of.", &Colors::Red), 0.5_f32)
+            .append_below(&self.chars.charseq("Oh. Well, that's nice.", &Colors::Yellow), self.chars.line_height);
         let (w, h) = self.gl.window_size();
         
         let identity = glm::identity::<f32, 4>();

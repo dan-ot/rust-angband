@@ -14,10 +14,12 @@ use crate::colors::{Colors, ColorService};
 pub struct Charmap {
     /// The OpenGL texture containing the rendered characters
     pub atlas: Rc<Box<Texture>>,
+    /// How much space between baselines
+    pub line_height: f32,
     /// A map of displayable character to coordinate and font details
     map: HashMap<char, Character>,
     /// The current color kit for coloring text
-    colors: Rc<Box<ColorService>>
+    colors: Rc<Box<ColorService>>,
 }
 
 #[derive(Debug)]
@@ -37,6 +39,7 @@ pub struct CharCoords {
     pub tex: TVec2<f32>
 }
 
+#[derive(Clone, Debug)]
 pub struct CharData {
     pub coords: Vec<CharCoords>,
     pub color: TVec3<f32>
@@ -142,7 +145,8 @@ impl Charmap {
             )
         });
 
-        let height_portion_descent = face.v_metrics(rt_scale).descent;
+        let v_metrics = face.v_metrics(rt_scale);
+        let height_portion_descent = v_metrics.descent;
 
         let bounds = glyphs.clone()
             .map(|tuple| {
@@ -318,64 +322,58 @@ impl Charmap {
         Charmap {
             atlas: Rc::new(Box::new(Texture::from_image(&rendered_packing))),
             map,
-            colors
+            colors,
+            line_height: (v_metrics.line_gap + v_metrics.ascent - v_metrics.descent) / rt_scale.y
         }
     }
 
-    pub fn line(&self, text: &str, color: &Colors) -> CharSeq {
+    pub fn charseq(&self, text: &str, color: &Colors) -> CharSeq {
         let col = self.colors.angband_color_table.get(color).unwrap_or(&vec3(1.0, 1.0, 1.0)).clone();
 
-        let data = text
+        let (data, _final_offset, final_width, final_over, final_under) = text
             .chars()
-            .scan(0_f32, |offset, ch| {
-                let char_def = self.map.get(&ch).unwrap_or(self.map.get(&'?').unwrap());
-                // We swap our y coords here - OpenGL stores textures with 0 = bottom, and our calculations
-                // have been 0 = top
-                let ch = vec![
-                    CharCoords {
-                        pos: vec3(char_def.quad.x + *offset, 0.0, 1.0 - char_def.quad.y),
-                        tex: vec2(char_def.texels.x, char_def.texels.y)
-                    },
-                    CharCoords {
-                        pos: vec3(char_def.quad.z + *offset, 0.0, 1.0 - char_def.quad.y),
-                        tex: vec2(char_def.texels.z, char_def.texels.y)
-                    },
-                    CharCoords {
-                        pos: vec3(char_def.quad.x + *offset, 0.0, 1.0 - char_def.quad.w),
-                        tex: vec2(char_def.texels.x, char_def.texels.w)
-                    },
-                    CharCoords {
-                        pos: vec3(char_def.quad.z + *offset, 0.0, 1.0 - char_def.quad.w),
-                        tex: vec2(char_def.texels.z, char_def.texels.w)
-                    },
-                ];
-                *offset = *offset + char_def.advance;
-                Some(CharData {
-                    color: col,
-                    coords: ch
-                })
-            })
-            .collect::<Vec<_>>();
+            .fold((vec!(), 0_f32, 0_f32, 0_f32, 0_f32), 
+                |(mut chars, offset, max_width, max_over, min_under), ch| {
+                    let char_def = self.map.get(&ch).unwrap_or(self.map.get(&'?').unwrap());
+                    // We swap our y coords here - OpenGL stores textures with 0 = bottom, and our calculations
+                    // have been 0 = top
+                    let ch = vec![
+                        CharCoords {
+                            pos: vec3(char_def.quad.x + offset, 0.0, 1.0 - char_def.quad.y),
+                            tex: vec2(char_def.texels.x, char_def.texels.y)
+                        },
+                        CharCoords {
+                            pos: vec3(char_def.quad.z + offset, 0.0, 1.0 - char_def.quad.y),
+                            tex: vec2(char_def.texels.z, char_def.texels.y)
+                        },
+                        CharCoords {
+                            pos: vec3(char_def.quad.x + offset, 0.0, 1.0 - char_def.quad.w),
+                            tex: vec2(char_def.texels.x, char_def.texels.w)
+                        },
+                        CharCoords {
+                            pos: vec3(char_def.quad.z + offset, 0.0, 1.0 - char_def.quad.w),
+                            tex: vec2(char_def.texels.z, char_def.texels.w)
+                        },
+                    ];
+                    chars.push(CharData {
+                        color: col,
+                        coords: ch
+                    });
+                    (
+                        chars,
+                        offset + char_def.advance,
+                        f32::max(max_width, char_def.quad.z + offset),
+                        f32::max(max_over, char_def.quad.y),
+                        f32::min(min_under, char_def.quad.w)
+                    )
+            });
         
         CharSeq {
             texture: self.atlas.clone(),
             chars: data,
-            width: data
-                .into_iter()
-                .map(|ch| {ch.coords.into_iter().map(|co| {co.pos.x}).reduce(f32::max).unwrap_or(0_f32)})
-                .reduce(f32::max).unwrap_or(0_f32),
-            under_base: data
-                .into_iter()
-                .map(|ch| {
-                    ch.coords.into_iter().map(|co| {co.pos.y})
-                })
-                .flatten()
-                .reduce(f32::min).unwrap_or(0_f32),
-            over_base: data
-                .into_iter()
-                .map(|ch| {ch.coords.into_iter().map(|co|{co.pos.y})})
-                .flatten()
-                .reduce(f32::max).unwrap_or(0_f32)
+            width: final_width,
+            under_base: final_under,
+            over_base: final_over,
         }
     }
 }
@@ -420,7 +418,71 @@ impl CharSeq {
         MeshKit::new_colored(&vec, &indices)
     }
 
-    pub fn concat(&self, other: &CharSeq) -> CharSeq {
-        
+    pub fn append_right(&self, other: &CharSeq, space: f32) -> CharSeq {
+        let new_chars = self.chars
+            .clone()
+            .into_iter()
+            .chain(
+                other.chars
+                    .clone()
+                    .into_iter()
+                    .map(|ch| {
+                        CharData {
+                            color: ch.color,
+                            coords: ch.coords
+                                .into_iter()
+                                .map(|coord| {
+                                    CharCoords {
+                                        tex: coord.tex,
+                                        pos: coord.pos + vec3(self.width + space, 0.0, 0.0)
+                                    }
+                                })
+                                .collect()
+                        }
+                    })
+            )
+            .collect::<Vec<_>>()
+            ;
+        CharSeq {
+            chars: new_chars,
+            texture: self.texture.clone(),
+            width: self.width + space + other.width,
+            over_base: f32::max(self.over_base, other.over_base),
+            under_base: f32::min(self.under_base, other.under_base)
+        }
+    }
+
+    pub fn append_below(&self, other: &CharSeq, space: f32) -> CharSeq {
+        let new_chars = self.chars
+            .clone()
+            .into_iter()
+            .chain(
+                other.chars
+                    .clone()
+                    .into_iter()
+                    .map(|ch| {
+                        CharData {
+                            color: ch.color,
+                            coords: ch.coords
+                                .into_iter()
+                                .map(|coord| {
+                                    CharCoords {
+                                        tex: coord.tex,
+                                        pos: coord.pos + vec3(0.0, 0.0, self.under_base + space)
+                                    }
+                                })
+                                .collect()
+                        }
+                    })
+            )
+            .collect::<Vec<_>>()
+            ;
+        CharSeq {
+            chars: new_chars,
+            texture: self.texture.clone(),
+            width: f32::max(self.width, other.width),
+            over_base: self.over_base,
+            under_base: other.under_base - self.under_base + space
+        }
     }
 }
