@@ -4,6 +4,7 @@ extern crate glfw;
 
 use std::path::Path;
 
+mod math;
 mod bitflags;
 mod cave;
 mod colors;
