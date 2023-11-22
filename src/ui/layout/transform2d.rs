@@ -1,4 +1,4 @@
-use super::{Matrix2x2f, Vector2f};
+use crate::math::{Matrix2x2f, Vector2f};
 
 #[derive(Clone, Copy, Debug)]
 pub struct LayoutTransform2d {
@@ -7,6 +7,10 @@ pub struct LayoutTransform2d {
 }
 
 impl LayoutTransform2d {
+    pub fn default() -> LayoutTransform2d {
+        LayoutTransform2d { scale: 1.0, translation: Vector2f::zero() }
+    }
+
     pub fn new(scale: f32, translation: Vector2f) -> LayoutTransform2d {
         LayoutTransform2d { scale, translation }
     }
@@ -39,11 +43,19 @@ pub struct RenderTransform2d {
 }
 
 impl RenderTransform2d {
+    pub fn default() -> RenderTransform2d {
+        RenderTransform2d { matrix: Matrix2x2f::identity(), translation: Vector2f::zero() }
+    }
+
     pub fn concatenate(self, rhs: RenderTransform2d) -> RenderTransform2d {
         RenderTransform2d { 
             matrix: self.matrix.concatenate(rhs.matrix),
             translation: rhs.matrix.transform(self.translation) + rhs.translation
         }
+    }
+
+    pub fn is_identity(self) -> bool {
+        self.matrix.is_identity() && self.translation == Vector2f::zero()
     }
 }
 

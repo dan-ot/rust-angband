@@ -5,7 +5,6 @@
 // use sdl2::ttf::{Font as SDLFont, Sdl2TtfContext, Hinting};
 // use sdl2::video::{Window as SDLWindow, WindowContext};
 use std::collections::VecDeque;
-use std::convert::TryFrom;
 
 pub mod ui_event;
 pub mod graphics;
@@ -13,6 +12,12 @@ pub mod tileset;
 pub mod chars;
 pub mod fon;
 pub mod panel;
+pub mod layout;
+
+pub trait ActiveWidget {
+    fn paint();
+    fn tick();
+}
 
 // TODO: in the source, these are a linked list...
 pub struct TerminalWindow {

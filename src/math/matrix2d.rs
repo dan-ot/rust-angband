@@ -37,4 +37,8 @@ impl Matrix2x2f {
             [c*e + d*g, c*f + d*h]
         ]}
     }
+
+    pub fn is_identity(self) -> bool {
+        self.data == [[1.0, 0.0], [0.0, 1.0]]
+    }
 }

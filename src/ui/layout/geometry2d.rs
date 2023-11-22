@@ -1,4 +1,5 @@
-use super::{Vector2f, LayoutTransform2d, transform2d::RenderTransform2d};
+use super::{LayoutTransform2d, RenderTransform2d};
+use crate::math::Vector2f;
 
 pub struct Geometry2d {
     accumulated_render_transform: Option<RenderTransform2d>,
@@ -34,6 +35,31 @@ impl Geometry2d {
         }
     }
 
+    pub fn new_size_layout_parent(
+        local_size: Vector2f,
+        local_layout: LayoutTransform2d,
+        parent_accumulated_layout: LayoutTransform2d,
+        parent_accumulated_render: RenderTransform2d
+    ) -> Geometry2d {
+
+        let accumulated_layout = local_layout.concatenate(parent_accumulated_layout);
+
+
+        Geometry2d { 
+            accumulated_render_transform: Option::Some(RenderTransform2d::from(local_layout).concatenate(parent_accumulated_render)),
+            size: local_size, 
+            scale: accumulated_layout.scale, 
+            absolute_position: accumulated_layout.translation,
+            position: local_layout.translation
+        }
+    }
+
+    pub fn root(
+        local_size: Vector2f,
+        layout: LayoutTransform2d
+    ) -> Geometry2d {
+        Geometry2d::new_size_layout_parent(local_size, layout, LayoutTransform2d::default(), RenderTransform2d::default())
+    }
 }
 
 pub fn concatenate_vtor(v: Vector2f, rt: RenderTransform2d) -> RenderTransform2d {
